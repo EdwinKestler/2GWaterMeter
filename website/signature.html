@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fingerprint — 2GWaterMeter</title>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="index.html">2GWaterMeter</a>
+    <a href="goal.html">Goal</a>
+    <a href="hardware.html">Hardware</a>
+    <a href="firmware.html">Firmware</a>
+    <a href="cloud.html">Cloud</a>
+    <a class="on" href="signature.html">Fingerprint</a>
+    <a href="portal.html">Portal</a>
+    <a href="https://github.com/EdwinKestler/2GWaterMeter">GitHub</a>
+  </nav>
+  <div class="wrap">
+    <div class="kicker">Consumption signature</div>
+    <h1>Cloud fits. The meter only evaluates.</h1>
+    <div class="eq">W(t) = w̄ + A₁ sin(2π t / 24 + φ₁) + A₂ sin(2π t / 12 + φ₂)</div>
+
+    <figure>
+      <img src="diagrams/04-ml-analysis-flow.png" alt="Python least-squares fingerprint pipeline">
+      <figcaption>Assemble hour-of-day samples → 5×5 normal equations → store + MQTT retain → onboard lk/oc.</figcaption>
+    </figure>
+
+    <h2>MQTT keys</h2>
+    <table>
+      <thead><tr><th>Symbol</th><th>JSON</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>w̄</td><td>w</td><td>Mean use (L/min)</td></tr>
+        <tr><td>A₁, φ₁</td><td>a1, p1</td><td>Daily harmonic</td></tr>
+        <tr><td>T₁</td><td>t1</td><td>24 hours</td></tr>
+        <tr><td>A₂, φ₂</td><td>a2, p2</td><td>Twice-daily harmonic</td></tr>
+        <tr><td>T₂</td><td>t2</td><td>12 hours</td></tr>
+      </tbody>
+    </table>
+    <pre>waterbox/&lt;IMEI&gt;/fp
+{"w":0.42,"a1":0.31,"p1":-0.40,"a2":0.12,"p2":1.10,"t1":24,"t2":12}</pre>
+
+    <h2>Onboard verdicts</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>Night leak · lk=1</h3>
+        <p class="muted">Hour in [00:00, 05:00) and lm &gt; W(t) + 0.15 L/min. Slide B: unknown night water on the owner site.</p>
+      </div>
+      <div class="card">
+        <h3>Overuse · oc=1</h3>
+        <p class="muted">Daytime and lm &gt; W(t) + 0.50 L/min. Human-behaviour excess vs the signature.</p>
+      </div>
+    </div>
+    <p class="muted">EEPROM stores the last fingerprint so validation continues after reboot even if the radio is down.</p>
+
+    <div class="footer">
+      <span>Source: docs/SIGNATURE.md, software/waterbox_cloud/fingerprint.py</span>
+      <a href="index.html">Home</a>
+    </div>
+  </div>
+</body>
+</html>

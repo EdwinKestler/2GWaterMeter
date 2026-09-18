@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cloud — 2GWaterMeter</title>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="index.html">2GWaterMeter</a>
+    <a href="goal.html">Goal</a>
+    <a href="hardware.html">Hardware</a>
+    <a href="firmware.html">Firmware</a>
+    <a class="on" href="cloud.html">Cloud</a>
+    <a href="signature.html">Fingerprint</a>
+    <a href="portal.html">Portal</a>
+    <a href="https://github.com/EdwinKestler/2GWaterMeter">GitHub</a>
+  </nav>
+  <div class="wrap">
+    <div class="kicker">docker compose</div>
+    <h1>One VM: MQTT, Postgres, worker, Grafana, portal</h1>
+    <p class="lead"><strong>One database</strong> named <code>waterbox</code>. The worker writes telemetry; the portal writes accounts and addresses; both read for charts. Do not add a second Postgres.</p>
+
+    <figure>
+      <img src="diagrams/01-system-flow.png" alt="End-to-end system flow diagram">
+      <figcaption>Field meter → SIM800 MQTT → RabbitMQ / worker / Postgres / Grafana. Fingerprint returns to the device.</figcaption>
+    </figure>
+
+    <h2>Services (lab)</h2>
+    <table>
+      <thead><tr><th>Service</th><th>Port</th><th>Who</th></tr></thead>
+      <tbody>
+        <tr><td>RabbitMQ MQTT plugin</td><td>1883, UI 15672</td><td>Meter + worker</td></tr>
+        <tr><td>Postgres 16</td><td>5432</td><td>Everyone</td></tr>
+        <tr><td>Python worker</td><td>—</td><td>Ingest + hourly/5 min fit</td></tr>
+        <tr><td>Grafana</td><td>3000</td><td>Operator only</td></tr>
+        <tr><td>Household portal</td><td>3001</td><td>You as resident</td></tr>
+      </tbody>
+    </table>
+    <pre>cd docker
+cp .env.example .env
+docker compose up --build</pre>
+
+    <figure>
+      <img src="diagrams/02-database-flow.png" alt="Database write and read paths">
+      <figcaption>Ingest upserts meters, computes wm_cloud, inserts readings. Fit inserts fingerprints. Grafana and the portal only read telemetry.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="diagrams/03-mqtt-flow.png" alt="MQTT topics and listen window">
+      <figcaption>Device session: connect, subscribe cmd+fp, publish data/info/(hb), listen 8 s, disconnect.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="illustrations/cloud-operations.jpg" alt="Operations room concept with dashboards and message broker">
+      <figcaption>Operator view: MQTT envelopes into a broker, then Postgres, then dashboards.</figcaption>
+    </figure>
+
+    <h2>Worker</h2>
+    <p class="muted"><code>python -m waterbox_cloud.worker</code> subscribes <code>waterbox/+/data</code>, <code>/info</code>, <code>/hb</code>. After enough samples (12 in lab) it fits W(t) and publishes retained JSON to <code>waterbox/&lt;IMEI&gt;/fp</code>.</p>
+
+    <div class="footer">
+      <span>Source: docker/, software/, docs/ARCHITECTURE.md</span>
+      <a href="index.html">Home</a>
+    </div>
+  </div>
+</body>
+</html>

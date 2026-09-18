@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hardware — 2GWaterMeter</title>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="index.html">2GWaterMeter</a>
+    <a href="goal.html">Goal</a>
+    <a class="on" href="hardware.html">Hardware</a>
+    <a href="firmware.html">Firmware</a>
+    <a href="cloud.html">Cloud</a>
+    <a href="signature.html">Fingerprint</a>
+    <a href="portal.html">Portal</a>
+    <a href="https://github.com/EdwinKestler/2GWaterMeter">GitHub</a>
+  </nav>
+  <div class="wrap">
+    <div class="kicker">Field unit</div>
+    <h1>Junction box, RPE meter, latching valve, Microduino + SIM800</h1>
+    <p class="lead">As-built July 2016: straight through-pipe, electronics in printed cups. CAD shows a safer lid-mount layout — prefer that for any next build.</p>
+
+    <div class="gallery">
+      <figure>
+        <img src="illustrations/field-install.jpg" alt="Meter box mounted on a wall with pipe nipples">
+        <figcaption>Field-install concept from the prototype enclosure.</figcaption>
+      </figure>
+      <figure>
+        <img src="photos/20160728_053938.jpg" alt="Closed black prototype box on a workbench">
+        <figcaption>Prototype closed: stainless threads, antenna stub, four lid screws.</figcaption>
+      </figure>
+      <figure>
+        <img src="photos/20160727_200548.jpg" alt="Open prototype showing flow body and Microduino">
+        <figcaption>As-built interior: RPE body, Hall cable, Core+ in the left cup, empty proto island on the right.</figcaption>
+      </figure>
+      <figure>
+        <img src="illustrations/production-cutaway.jpg" alt="CAD-derived cutaway with lid-mounted electronics">
+        <figcaption>Production target from SketchUp: electronics on the lid, off the wet plane.</figcaption>
+      </figure>
+    </div>
+
+    <h2>Bill of materials</h2>
+    <table>
+      <thead><tr><th>Qty</th><th>Part</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Waterproof junction box</td><td>Through-wall male threads, gasketed lid</td></tr>
+        <tr><td>1</td><td>RPE BVS_RF-3-30L</td><td>3–30 L/min, 245 p/L Hall or 490 Reed</td></tr>
+        <tr><td>1</td><td>RPE latching solenoid</td><td>Firmware is 25 ms — L6V latching profile</td></tr>
+        <tr><td>1</td><td>Microduino Core+ (ATmega644PA)</td><td>Lab board is 8 MHz; Serial1 on D2/D3</td></tr>
+        <tr><td>1</td><td>Microduino GSM SIM800</td><td>UART to Serial1, PWR D5, RST D7</td></tr>
+        <tr><td>1</td><td>L9110 H-bridge</td><td>D9/D10, ~800 mA/channel</td></tr>
+        <tr><td>1</td><td>2G SIM</td><td>See 2G-EOL before buying more</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Wiring (Core+)</h2>
+    <p class="muted">External interrupts on this board are D2, D3, and D6. D2/D3 are SIM800 UART, so the Hall sensor is on <strong>D6</strong>.</p>
+    <pre>water in --- RPE body + Hall --- water out
+Hall out --> D6 (pull-up)   Hall V+ --> 5V   Hall V- --> GND
+L9110 IA <-- D9 PWM         L9110 IB <-- D10 PWM
+SIM800 UART <-- Serial1 D2/D3    PWRKEY D5    RESET D7
+LED D13</pre>
+
+    <h2>Prototype photos</h2>
+    <div class="gallery">
+      <img src="photos/20160727_200815.jpg" alt="Prototype photo">
+      <img src="photos/20160727_200831.jpg" alt="Prototype photo">
+      <img src="photos/20160728_052809.jpg" alt="Prototype photo">
+      <img src="photos/20160726_220433.jpg" alt="Prototype photo">
+    </div>
+    <p class="muted">Datasheets and Eagle schematics live in the repo under <code>hardware/datasheets</code> and <code>hardware/schematics</code>.</p>
+
+    <div class="footer">
+      <span>Source: docs/BOM.md, docs/WIRING.md, hardware/photos</span>
+      <a href="index.html">Home</a>
+    </div>
+  </div>
+</body>
+</html>

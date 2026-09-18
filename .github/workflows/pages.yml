@@ -1,0 +1,47 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: ["master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble static site
+        run: |
+          set -euo pipefail
+          mkdir -p _site/css _site/diagrams _site/illustrations _site/photos _site/renders _site/docs-img
+          cp website/*.html _site/
+          cp website/css/* _site/css/
+          cp docs/diagrams/*.png _site/diagrams/
+          cp docs/illustrations/* _site/illustrations/
+          cp hardware/photos/* _site/photos/
+          cp hardware/renders/*.png _site/renders/ || true
+          shopt -s nullglob
+          cp docs/*.{png,PNG,jpg,JPG,jpeg,JPEG} _site/docs-img/ || true
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

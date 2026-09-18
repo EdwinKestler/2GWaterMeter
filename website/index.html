@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2GWaterMeter — Autonomous urban water utilities</title>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand on" href="index.html">2GWaterMeter</a>
+    <a href="goal.html">Goal</a>
+    <a href="hardware.html">Hardware</a>
+    <a href="firmware.html">Firmware</a>
+    <a href="cloud.html">Cloud</a>
+    <a href="signature.html">Fingerprint</a>
+    <a href="portal.html">Portal</a>
+    <a href="https://github.com/EdwinKestler/2GWaterMeter">GitHub</a>
+  </nav>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="kicker">Technical explanation · MIT Solve / Empagua</div>
+        <h1>A household water meter that learns a usage fingerprint and flags leaks.</h1>
+        <p class="lead">Open hardware + 2G MQTT + Postgres. The cloud fits a two-harmonic daily model; the meter evaluates it onboard. Households see their own litres, map, and signature. Operators keep Grafana.</p>
+      </div>
+      <img src="illustrations/hero-enclosure.jpg" alt="Black junction-box water meter with stainless pipe threads">
+    </div>
+
+    <div class="steps">
+      <div class="card step"><h3>1. IoT data</h3><p class="muted">The Core+ counts Hall pulses, publishes litres and valve state over SIM800 MQTT every 60 s, then listens 8 s for commands.</p></div>
+      <div class="card step s2"><h3>2. Cloud model</h3><p class="muted">Python least-squares fits W(t) = mean + 24 h sine + 12 h sine on historical flow.</p></div>
+      <div class="card step s3"><h3>3. Live compare</h3><p class="muted">Coefficients return on <span class="mono" style="padding:2px 6px">…/fp</span>. The MCU flags night leak and daytime overuse.</p></div>
+      <div class="card step s4"><h3>4. Leads</h3><p class="muted">Household portal charts and map; Grafana for the operator; optional latching-valve shutoff.</p></div>
+    </div>
+
+    <h2>What this site covers</h2>
+    <div class="grid2">
+      <a class="card" href="hardware.html"><h3>Hardware</h3><p class="muted">RPE body, latching coil, Microduino Core+, SIM800, enclosure photos and CAD.</p></a>
+      <a class="card" href="firmware.html"><h3>Firmware</h3><p class="muted">FSM, D6 interrupt, per-IMEI MQTT, valve cmd, hourly heartbeat.</p></a>
+      <a class="card" href="cloud.html"><h3>Cloud</h3><p class="muted">RabbitMQ MQTT, one Postgres, worker, Grafana, Compose lab stack.</p></a>
+      <a class="card" href="portal.html"><h3>Household portal</h3><p class="muted">IMEI login, consumption graphs, fingerprint overlay, OSM geofence map.</p></a>
+    </div>
+
+    <figure>
+      <img src="illustrations/urban-deployment.jpg" alt="City with utility meter boxes reporting over a cellular network">
+      <figcaption>Concept: meters on the street reporting a usage signature into a utility cloud.</figcaption>
+    </figure>
+
+    <p class="note">This is a 2016-era 2G prototype (Tigo Guatemala / Empagua). It is a lab system today. 2G sunset and a radio revision are documented under Goal.</p>
+
+    <div class="footer">
+      <span>2GWaterMeter · GPL-3.0</span>
+      <span><a href="https://github.com/EdwinKestler/2GWaterMeter">github.com/EdwinKestler/2GWaterMeter</a></span>
+    </div>
+  </div>
+</body>
+</html>

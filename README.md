@@ -58,6 +58,8 @@ Meters publish `waterbox/<IMEI>/data`. The Python worker stores rows, fits the t
 
 Household portal (IMEI login, charts, map): [`user_portal/README.md`](user_portal/README.md) on port **3001**. **Lab deploy is Compose, one house / one meter:** [`docker/README.md`](docker/README.md). Vercel later: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
+Technical explanation site (GitHub Pages): **https://edwinkestler.github.io/2GWaterMeter/** — sources in [`website/`](website/), assets from [`docs/`](docs/).
+
 Illustrated flows: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Product stills: [`docs/ILLUSTRATIONS.md`](docs/ILLUSTRATIONS.md). Runbook: [`software/README.md`](software/README.md). Equation: [`docs/SIGNATURE.md`](docs/SIGNATURE.md).
 
 ## License

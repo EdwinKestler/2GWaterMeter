@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portal — 2GWaterMeter</title>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="index.html">2GWaterMeter</a>
+    <a href="goal.html">Goal</a>
+    <a href="hardware.html">Hardware</a>
+    <a href="firmware.html">Firmware</a>
+    <a href="cloud.html">Cloud</a>
+    <a href="signature.html">Fingerprint</a>
+    <a class="on" href="portal.html">Portal</a>
+    <a href="https://github.com/EdwinKestler/2GWaterMeter">GitHub</a>
+  </nav>
+  <div class="wrap">
+    <div class="kicker">user_portal · :3001</div>
+    <h1>Household login, charts, and map — not Grafana</h1>
+    <p class="lead">Grafana is excellent for operators. Households need IMEI registration, address geocoding, and a geofence. That lives in the Next.js portal on the same Compose Postgres.</p>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Portal (resident)</h3>
+        <p class="muted">Register with email + IMEI. Charts: hourly / daily / weekly / monthly. Overlay monthly W(t). Save address → OSM map, below/normal/above median.</p>
+      </div>
+      <div class="card">
+        <h3>Grafana (operator)</h3>
+        <p class="muted">All SQL, heartbeats, every IMEI. Read-only. Do not send household users to :3000.</p>
+      </div>
+    </div>
+
+    <h2>Lab (one house, one meter)</h2>
+    <ol class="muted">
+      <li><code>cd docker && docker compose up --build</code></li>
+      <li>Flash the Core+; copy IMEI from serial at 57600.</li>
+      <li>Open <strong>http://localhost:3001</strong> and register that IMEI plus your street address.</li>
+      <li>With a single meter the heatmap band is “normal” (you are the median). That is expected.</li>
+    </ol>
+
+    <h2>Same database</h2>
+    <p>Accounts are <code>portal_users</code> / <code>portal_meters</code>. Litres and fingerprints are <code>SELECT</code>s on the worker’s <code>readings</code> and <code>fingerprints</code>. Reporting view: <code>v_household_monthly</code>.</p>
+
+    <p class="note">Vercel is deferred. The portal cannot reach a private Compose Postgres from Vercel without exposing the database. Keep the portal container on the lab VM.</p>
+
+    <div class="footer">
+      <span>Source: docs/PORTAL_DASHBOARDS.md, docs/DEPLOYMENT.md, user_portal/</span>
+      <a href="index.html">Home</a>
+    </div>
+  </div>
+</body>
+</html>
