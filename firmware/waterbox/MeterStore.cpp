@@ -5,6 +5,9 @@
 #define EEPROM_MAGIC 0xA5
 #define EEPROM_VERSION 1
 #define EEPROM_BASE 0
+#define EEPROM_FP_MAGIC 0x5A
+#define EEPROM_FP_VERSION 1
+#define EEPROM_FP_BASE 32
 
 struct EepromImage {
   uint8_t magic;
@@ -65,4 +68,33 @@ void MeterStore::saveIfDue(uint32_t pulses, bool valveOpen, unsigned long minInt
     return;
   }
   save(pulses, valveOpen);
+}
+
+struct FingerprintImage {
+  uint8_t magic;
+  uint8_t version;
+  ConsumptionSignature::Params params;
+  uint8_t crc;
+} __attribute__((packed));
+
+bool MeterStore::loadFingerprint(ConsumptionSignature::Params* params) {
+  FingerprintImage img;
+  EEPROM.get(EEPROM_FP_BASE, img);
+  if (img.magic != EEPROM_FP_MAGIC || img.version != EEPROM_FP_VERSION) {
+    return false;
+  }
+  if (crc8((const uint8_t*)&img.params, sizeof(img.params)) != img.crc) {
+    return false;
+  }
+  *params = img.params;
+  return true;
+}
+
+void MeterStore::saveFingerprint(const ConsumptionSignature::Params& params) {
+  FingerprintImage img;
+  img.magic = EEPROM_FP_MAGIC;
+  img.version = EEPROM_FP_VERSION;
+  img.params = params;
+  img.crc = crc8((const uint8_t*)&img.params, sizeof(img.params));
+  EEPROM.put(EEPROM_FP_BASE, img);
 }

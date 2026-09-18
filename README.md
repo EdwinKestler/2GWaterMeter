@@ -9,12 +9,15 @@ This is a **2016 prototype**. It is not ready to deploy. 2G is end-of-life in mo
 ```
 firmware/waterbox/     Arduino sketch: FSM + class modules (open this folder in the IDE)
 libraries/             sim800, GSMPubSubClient, Time, TimeAlarms, ArduinoJson
+software/              MQTT ingest, Postgres, fingerprint fit (Python)
+user_portal/           Household login, charts, fingerprint overlay, OSM map
+docker/                RabbitMQ + Postgres + Grafana + worker + portal
 hardware/cad/          SketchUp 2014 model
 hardware/photos/       as-built photos (restored)
 hardware/renders/      SketchUp screenshots
 hardware/datasheets/   RPE meter, RPE coils, L9110
 hardware/schematics/   vendor Eagle files for Core+ and SIM800
-docs/                  BOM, wiring, 2G sunset
+docs/                  BOM, wiring, 2G sunset, fingerprint, architecture diagrams
 ```
 
 ## What the firmware does now
@@ -44,6 +47,18 @@ framework = arduino
 - CAD vs prototype: [`hardware/cad/README.md`](hardware/cad/README.md)
 
 STL/STEP were **not** exported here (SketchUp 2014 OLE file; no converter in this environment). Export from SketchUp into `hardware/cad/exports/`.
+
+## Cloud (RabbitMQ MQTT + Postgres + Grafana)
+
+```bash
+cd docker && cp .env.example .env && docker compose up --build
+```
+
+Meters publish `waterbox/<IMEI>/data`. The Python worker stores rows, fits the two-harmonic signature, and publishes `waterbox/<IMEI>/fp`. Grafana is on port 3000.
+
+Household portal (IMEI login, charts, map): [`user_portal/README.md`](user_portal/README.md) on port **3001**. **Lab deploy is Compose, one house / one meter:** [`docker/README.md`](docker/README.md). Vercel later: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+Illustrated flows: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Product stills: [`docs/ILLUSTRATIONS.md`](docs/ILLUSTRATIONS.md). Runbook: [`software/README.md`](software/README.md). Equation: [`docs/SIGNATURE.md`](docs/SIGNATURE.md).
 
 ## License
 

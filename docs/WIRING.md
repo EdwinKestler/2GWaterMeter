@@ -32,13 +32,17 @@ Microduino Core+ (ATmega644PA). Serial1 is D2 (RX1) + D3 (TX1) and **must** stay
 
 L9110 continuous current is ~800 mA. Stay under that for the chosen coil (L6V latching is ~375 mA; some 12 V windings are ~710 mA).
 
+Message sequence: [`ARCHITECTURE.md`](ARCHITECTURE.md#3-mqtt-message-flow) · [MQTT flow figure](diagrams/03-mqtt-flow.png).
+
 ## MQTT topics (after IMEI is read)
 
 | Direction | Topic | Payload |
 |-----------|--------|---------|
-| device → broker | `waterbox/<IMEI>/data` | JSON: `imei`, `lm` (L/min), `mls` (mL this sample), `tl_ml` (mL total), `ts` (SIM800 RTC ISO-8601 or `unset`), `v` (0/1) |
-| device → broker | `waterbox/<IMEI>/info` | JSON: `imei`, `ppl`, `reed`, `v` |
-| broker → device | `waterbox/<IMEI>/cmd` | `on` or `off` (ASCII). Commands are only received during the post-publish listen window (`CMD_LISTEN_MS`, default 8 s). |
+| device → broker | `waterbox/<IMEI>/data` | JSON: `imei`, `lm`, `mls`, `tl_ml`, `ts`, `v`, `wm` (model L/min), `lk` (night leak), `oc` (overuse) |
+| device → broker | `waterbox/<IMEI>/info` | JSON: `imei`, `ppl`, `reed`, `v`, `fp` (1 if fingerprint stored) |
+| device → broker | `waterbox/<IMEI>/hb` | Hourly health ping: `imei`, `ts`, `up` (uptime s), `v`, `fp`, `lk`, `oc`, `rssi`, `tl_ml`, `ok` |
+| broker → device | `waterbox/<IMEI>/cmd` | Valve: `on`/`open`/`1` or `off`/`close`/`0`, or `{"v":1}`. Only during `CMD_LISTEN_MS`. |
+| broker → device | `waterbox/<IMEI>/fp` | Fingerprint JSON `w,a1,p1,a2,p2,t1,t2` (retained). See `docs/SIGNATURE.md`. |
 
 Set `mqttUser` / `mqttPass` in `firmware/waterbox/settings.h`. With `MQTT_ALLOW_ANONYMOUS 0` (default) the radio will not start until both are non-empty. Lab-only: set `MQTT_ALLOW_ANONYMOUS` to 1.
 

@@ -1,0 +1,105 @@
+# One-house lab: MQTT + Postgres + worker + Grafana :3000 + household portal :3001
+name: waterbox
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${MQTT_USER:-waterbox}
+      RABBITMQ_DEFAULT_PASS: ${MQTT_PASS:-waterbox}
+    ports:
+      - "1883:1883"
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-waterbox}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-waterbox}
+      POSTGRES_DB: ${POSTGRES_DB:-waterbox}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-waterbox} -d ${POSTGRES_DB:-waterbox}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      GF_USERS_DEFAULT_THEME: dark
+      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-http://localhost:3000}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+
+  worker:
+    build:
+      context: ..
+      dockerfile: software/Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      MQTT_HOST: rabbitmq
+      MQTT_PORT: "1883"
+      MQTT_USER: ${MQTT_USER:-waterbox}
+      MQTT_PASS: ${MQTT_PASS:-waterbox}
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGDATABASE: ${POSTGRES_DB:-waterbox}
+      PGUSER: ${POSTGRES_USER:-waterbox}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-waterbox}
+      WATERBOX_TZ: ${WATERBOX_TZ:-America/Guatemala}
+      FIT_EVERY_SECONDS: ${FIT_EVERY_SECONDS:-300}
+      FIT_LOOKBACK_DAYS: ${FIT_LOOKBACK_DAYS:-14}
+      FIT_MIN_SAMPLES: ${FIT_MIN_SAMPLES:-12}
+    restart: unless-stopped
+
+  portal:
+    build:
+      context: ..
+      dockerfile: user_portal/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Same DB as worker/Grafana — do not point this at a second Postgres.
+      DATABASE_URL: postgres://${POSTGRES_USER:-waterbox}:${POSTGRES_PASSWORD:-waterbox}@postgres:5432/${POSTGRES_DB:-waterbox}
+      AUTH_SECRET: ${AUTH_SECRET:-change-me-to-a-long-random-string}
+      TZ: ${WATERBOX_TZ:-America/Guatemala}
+      NEXT_PUBLIC_MAP_CENTER_LAT: "14.6349"
+      NEXT_PUBLIC_MAP_CENTER_LON: "-90.5069"
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+
+volumes:
+  rabbitmq_data:
+  postgres_data:
+  grafana_data:

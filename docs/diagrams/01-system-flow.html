@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="style.css">
+  <title>System flow</title>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <div class="kicker">2GWaterMeter · technical documentation</div>
+        <h1>1. End-to-end system flow</h1>
+      </div>
+      <div class="meta">Field meter → 2G MQTT → cloud stack<br>Fingerprint returns to the device for onboard checks</div>
+    </div>
+
+    <div class="row" style="flex: 1;">
+      <div class="box accent-cyan" style="flex: 1.05;">
+        <h2>Field</h2>
+        <h3>Microduino Core+ meter</h3>
+        <div class="pill" style="margin: 8px 0;"><strong>RPE Hall / Reed</strong><span>D6 interrupt · 245 or 490 pulses/L</span></div>
+        <div class="pill" style="margin: 8px 0;"><strong>Latching valve</strong><span>L9110 on D9/D10 · 25 ms pulse</span></div>
+        <div class="pill" style="margin: 8px 0;"><strong>WaterboxFsm</strong><span>Idle → Connect → Publish → Listen 8 s → Disconnect</span></div>
+        <div class="pill" style="margin: 8px 0;"><strong>ConsumptionSignature</strong><span>Evaluates W(t) onboard · flags lk / oc</span></div>
+      </div>
+
+      <div class="arrow"><div class="shaft">→</div>SIM800<br>MQTT 1883<br>every 60 s</div>
+
+      <div class="box accent-blue" style="flex: 1.15;">
+        <h2>Cloud VM (Docker Compose)</h2>
+        <div class="pill" style="margin: 8px 0;"><strong>RabbitMQ</strong><span>MQTT plugin :1883 · AMQP :5672 · UI :15672</span></div>
+        <div class="pill" style="margin: 8px 0;"><strong>Python worker</strong><span>waterbox_cloud.worker · ingest + hourly fit</span></div>
+        <div class="pill" style="margin: 8px 0;"><strong>PostgreSQL 16</strong><span>meters · readings · fingerprints</span></div>
+        <div class="pill" style="margin: 8px 0;"><strong>Grafana :3000</strong><span>flow vs W(t) · leak / overuse / volume</span></div>
+      </div>
+
+      <div class="arrow"><div class="shaft">←</div>retained<br>fingerprint<br>waterbox/IMEI/fp</div>
+
+      <div class="box accent-amber" style="flex: 0.85;">
+        <h2>Operator</h2>
+        <h3>Grafana dashboards</h3>
+        <ul class="plain">
+          <li><b>Live</b> lm vs onboard wm vs cloud wm</li>
+          <li><b>Night leak</b> lk=1 (owner-site loss)</li>
+          <li><b>Overuse</b> oc=1 daytime excess</li>
+          <li><b>Valve</b> MQTT cmd on / off during listen window</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box" style="padding: 14px 18px;">
+      <h2>Control loop (slide: Autonomous Urban Water Utilities)</h2>
+      <div class="row">
+        <div class="pill" style="flex:1;"><strong>1. IoT sends real-time data</strong><span>lm, mls, tl_ml, ts, v, wm, lk, oc</span></div>
+        <div class="arrow" style="min-width:40px;"><div class="shaft">→</div></div>
+        <div class="pill" style="flex:1;"><strong>2. Model applied in the cloud</strong><span>least-squares two-harmonic fit</span></div>
+        <div class="arrow" style="min-width:40px;"><div class="shaft">→</div></div>
+        <div class="pill" style="flex:1;"><strong>3. Signature compared live</strong><span>device evaluates W(t) every sample</span></div>
+        <div class="arrow" style="min-width:40px;"><div class="shaft">→</div></div>
+        <div class="pill" style="flex:1;"><strong>4. Resource leads</strong><span>Grafana + optional valve shutoff</span></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>2GWaterMeter · docs/diagrams/01-system-flow.png</span>
+      <span>Field clock: 8 MHz Core+ · serial 57600 · MQTT user waterbox</span>
+    </div>
+  </div>
+</body>
+</html>

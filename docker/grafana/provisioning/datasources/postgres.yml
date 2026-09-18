@@ -1,0 +1,17 @@
+apiVersion: 1
+datasources:
+  - name: Waterbox
+    uid: waterbox-pg
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    user: waterbox
+    isDefault: true
+    editable: false
+    jsonData:
+      database: waterbox
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false
+    secureJsonData:
+      password: waterbox

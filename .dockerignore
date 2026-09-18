@@ -1,0 +1,13 @@
+.git
+.pio
+hardware
+libraries/ArduinoJson
+HArdware_Skecthup
+**/.venv
+**/__pycache__
+**/.env
+*.skp
+*.jpg
+*.png
+*.pdf
+docker/postgres/data

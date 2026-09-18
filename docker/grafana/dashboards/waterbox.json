@@ -1,0 +1,140 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+      "fieldConfig": { "defaults": { "unit": "l/min" }, "overrides": [] },
+      "gridPos": { "h": 9, "w": 16, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ts AS time, lm AS measured, wm AS onboard_W, wm_cloud AS cloud_W FROM readings WHERE imei = '$imei' AND $__timeFilter(ts) ORDER BY ts",
+          "refId": "A"
+        }
+      ],
+      "title": "Flow vs fingerprint W(t)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+      "fieldConfig": { "defaults": { "decimals": 0 }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "id": 2,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(MAX(lk),0) AS \"Night leak\" FROM readings WHERE imei = '$imei' AND $__timeFilter(ts)",
+          "refId": "A"
+        }
+      ],
+      "title": "Night leak (lk)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+      "fieldConfig": { "defaults": { "decimals": 0 }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+      "id": 3,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(MAX(oc),0) AS \"Overuse\" FROM readings WHERE imei = '$imei' AND $__timeFilter(ts)",
+          "refId": "A"
+        }
+      ],
+      "title": "Overconsumption (oc)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+      "fieldConfig": { "defaults": { "unit": "mL" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 4 },
+      "id": 4,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT tl_ml AS \"Total mL\" FROM readings WHERE imei = '$imei' ORDER BY ts DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Cumulative volume",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "id": 5,
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('hour', ts) AS time, AVG(lm) AS avg_lm FROM readings WHERE imei = '$imei' AND $__timeFilter(ts) GROUP BY 1 ORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Hourly mean flow (signature shape)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "id": 6,
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT created_at, w, a1, p1, a2, p2, t1, t2, n_samples, published FROM fingerprints WHERE imei = '$imei' ORDER BY created_at DESC LIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Cloud fingerprints",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["waterbox", "mqtt"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": { "type": "postgres", "uid": "waterbox-pg" },
+        "definition": "SELECT imei FROM meters ORDER BY imei",
+        "includeAll": false,
+        "label": "IMEI",
+        "name": "imei",
+        "query": "SELECT imei FROM meters ORDER BY imei",
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-7d", "to": "now" },
+  "timezone": "America/Guatemala",
+  "title": "Waterbox consumption",
+  "uid": "waterbox-main",
+  "version": 1
+}

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="style.css">
+  <title>MQTT message flow</title>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <div class="kicker">2GWaterMeter · technical documentation</div>
+        <h1>3. MQTT message flow</h1>
+      </div>
+      <div class="meta">RabbitMQ MQTT plugin · port 1883<br>Topics are per IMEI · radio up ~8 s after each publish</div>
+    </div>
+
+    <div class="row">
+      <div class="box accent-cyan" style="width: 280px;">
+        <h2>Device session</h2>
+        <div class="pill"><strong>1 Connect</strong><span>TCP + MQTT auth · client id = IMEI</span></div>
+        <div class="arrow down"><div class="shaft">↓</div></div>
+        <div class="pill"><strong>2 Subscribe</strong><span>cmd and fp</span></div>
+        <div class="arrow down"><div class="shaft">↓</div></div>
+        <div class="pill"><strong>3 Publish</strong><span>info then data</span></div>
+        <div class="arrow down"><div class="shaft">↓</div></div>
+        <div class="pill"><strong>4 Listen 8 s</strong><span>CMD_LISTEN_MS</span></div>
+        <div class="arrow down"><div class="shaft">↓</div></div>
+        <div class="pill"><strong>5 Disconnect</strong><span>CIPCLOSE + CIPSHUT</span></div>
+      </div>
+
+      <div style="flex:1; display:flex; flex-direction:column; gap:12px;">
+        <div class="box accent-green">
+          <h2>Device → broker</h2>
+          <div class="grid2">
+            <div class="pill">
+              <strong class="mono">waterbox/&lt;IMEI&gt;/data</strong>
+              <span>fields: imei, lm, mls, tl_ml, ts, v, wm, lk, oc</span>
+            </div>
+            <div class="pill">
+              <strong class="mono">waterbox/&lt;IMEI&gt;/info</strong>
+              <span>fields: imei, ppl, reed, v, fp</span>
+            </div>
+          </div>
+        </div>
+        <div class="box accent-amber">
+          <h2>Broker → device (only during listen window)</h2>
+          <div class="grid2">
+            <div class="pill">
+              <strong class="mono">waterbox/&lt;IMEI&gt;/cmd</strong>
+              <span>exact payload on or off → latching valve</span>
+            </div>
+            <div class="pill">
+              <strong class="mono">waterbox/&lt;IMEI&gt;/fp</strong>
+              <span>fields: w, a1, p1, a2, p2, t1, t2 · retained</span>
+            </div>
+          </div>
+        </div>
+        <div class="box accent-blue">
+          <h2>Cloud worker subscriptions</h2>
+          <div class="row">
+            <div class="pill" style="flex:1;"><strong class="mono">waterbox/+/data</strong><span>insert readings + wm_cloud</span></div>
+            <div class="pill" style="flex:1;"><strong class="mono">waterbox/+/info</strong><span>upsert meters</span></div>
+            <div class="pill" style="flex:1;"><strong class="mono">publish …/fp retain=true</strong><span>after each successful fit</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Timing</h2>
+      <div class="row">
+        <div class="pill" style="flex:1;"><strong>PUBLISH_INTERVAL_MS = 60 s</strong><span>GPRS down between cycles · pulses still counted</span></div>
+        <div class="pill" style="flex:1;"><strong>CMD_LISTEN_MS = 8 s</strong><span>cmd and fp must arrive in this window (fp is retained)</span></div>
+        <div class="pill" style="flex:1;"><strong>Auth</strong><span>mqttUser / mqttPass waterbox · MQTT_ALLOW_ANONYMOUS 0</span></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>2GWaterMeter · docs/diagrams/03-mqtt-flow.png</span>
+      <span>Do not share a global waterbox/out topic — commands are per IMEI</span>
+    </div>
+  </div>
+</body>
+</html>

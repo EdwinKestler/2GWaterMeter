@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="style.css">
+  <title>ML analysis flow</title>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <div class="kicker">2GWaterMeter · technical documentation</div>
+        <h1>4. Python analysis / fingerprint flow</h1>
+      </div>
+      <div class="meta">software/waterbox_cloud/fingerprint.py<br>Cloud fits · device only evaluates</div>
+    </div>
+
+    <div class="eq">W(t) = w̄ + A₁ sin(2π t / T₁ + φ₁) + A₂ sin(2π t / T₂ + φ₂) &nbsp;&nbsp; T₁ = 24 h &nbsp; T₂ = 12 h &nbsp; t = hour of day</div>
+
+    <div class="row">
+      <div class="box accent-blue" style="flex: 1;">
+        <h2>1. Assemble samples</h2>
+        <ul class="plain">
+          <li>Every <b>FIT_EVERY_SECONDS</b> (3600)</li>
+          <li>Last <b>14 days</b> of readings.lm</li>
+          <li>Hour-of-day in <b>America/Guatemala</b></li>
+          <li>Skip IMEI if n &lt; <b>24</b></li>
+        </ul>
+      </div>
+      <div class="arrow"><div class="shaft">→</div></div>
+      <div class="box accent-violet" style="flex: 1.15;">
+        <h2>2. Linear least squares</h2>
+        <ul class="plain">
+          <li>Expand sines: A sin(ωt+φ) = B sin ωt + C cos ωt</li>
+          <li>Design matrix: [1, sin ω₁t, cos ω₁t, sin ω₂t, cos ω₂t]</li>
+          <li>Solve 5×5 normal equations</li>
+          <li>A = hypot(B,C) &nbsp; φ = atan2(C,B)</li>
+        </ul>
+      </div>
+      <div class="arrow"><div class="shaft">→</div></div>
+      <div class="box accent-green" style="flex: 1;">
+        <h2>3. Publish fingerprint</h2>
+        <ul class="plain">
+          <li>INSERT fingerprints (w,a1,p1,a2,p2,t1,t2)</li>
+          <li>MQTT retain to <span class="mono">…/fp</span></li>
+          <li>Device EEPROM stores params</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="box accent-cyan" style="flex: 1.2;">
+        <h2>4. Onboard validation (ConsumptionSignature)</h2>
+        <div class="grid2">
+          <div class="pill"><strong>Night leak lk=1</strong><span>hour in [00:00, 05:00) and lm &gt; W(t) + 0.15 L/min<br>Slide B: unknown night water on the owner site</span></div>
+          <div class="pill"><strong>Overuse oc=1</strong><span>daytime and lm &gt; W(t) + 0.50 L/min<br>Human-behaviour excess vs signature</span></div>
+        </div>
+      </div>
+      <div class="box accent-red" style="flex: 0.8;">
+        <h2>Not fitted on the MCU</h2>
+        <ul class="plain">
+          <li>ATmega644PA only evaluates sin() of cloud coefficients</li>
+          <li>Network loss (slide C) stays in Grafana / multi-meter SQL</li>
+          <li>Offline CSV fit: tools/fit_signature.py</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Inputs and outputs</h2>
+      <div class="row">
+        <div class="pill" style="flex:1;"><strong>Input</strong><span class="mono">readings.lm, readings.ts → hour-of-day</span></div>
+        <div class="pill" style="flex:1;"><strong>Coefficients</strong><span class="mono">{"w","a1","p1","a2","p2","t1":24,"t2":12}</span></div>
+        <div class="pill" style="flex:1;"><strong>Device telemetry</strong><span class="mono">wm = W(t) · lk · oc</span></div>
+        <div class="pill" style="flex:1;"><strong>Grafana</strong><span class="mono">lm vs wm vs wm_cloud</span></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>2GWaterMeter · docs/diagrams/04-ml-analysis-flow.png</span>
+      <span>Harmonic regression, not a neural net · same equation as the Flatbox/SOLVE slide</span>
+    </div>
+  </div>
+</body>
+</html>

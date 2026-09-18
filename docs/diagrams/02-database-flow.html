@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="style.css">
+  <title>Database flow</title>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <div class="kicker">2GWaterMeter · technical documentation</div>
+        <h1>2. Database flow</h1>
+      </div>
+      <div class="meta">Postgres 16 schema · init.sql<br>Worker writes; Grafana reads</div>
+    </div>
+
+    <div class="row">
+      <div class="box accent-blue" style="flex: 1;">
+        <h2>Write path (ingest)</h2>
+        <div class="col">
+          <div class="pill"><strong>A. Parse MQTT JSON</strong><span>imei from topic waterbox/&lt;IMEI&gt;/data|info</span></div>
+          <div class="arrow down"><div class="shaft">↓</div></div>
+          <div class="pill"><strong>B. UPSERT meters</strong><span>last_seen, ppl, valve, fp_valid</span></div>
+          <div class="arrow down"><div class="shaft">↓</div></div>
+          <div class="pill"><strong>C. Lookup latest fingerprints row</strong><span>predict W(hour-of-day) → wm_cloud</span></div>
+          <div class="arrow down"><div class="shaft">↓</div></div>
+          <div class="pill"><strong>D. INSERT readings</strong><span>ts, lm, mls, tl_ml, v, wm, wm_cloud, lk, oc, raw jsonb</span></div>
+        </div>
+      </div>
+
+      <div class="box accent-green" style="flex: 1.35;">
+        <h2>Tables</h2>
+        <div class="grid3">
+          <div class="pill">
+            <strong>meters</strong>
+            <span class="mono">imei PK</span>
+            <ul class="plain">
+              <li>first_seen / last_seen</li>
+              <li>pulses_per_liter</li>
+              <li>valve</li>
+              <li>fp_valid</li>
+            </ul>
+          </div>
+          <div class="pill">
+            <strong>readings</strong>
+            <span class="mono">id PK · imei FK</span>
+            <ul class="plain">
+              <li>ts (device RTC)</li>
+              <li>lm / mls / tl_ml</li>
+              <li>wm (onboard W(t))</li>
+              <li>wm_cloud (Python W(t))</li>
+              <li>lk · oc · raw</li>
+            </ul>
+          </div>
+          <div class="pill">
+            <strong>fingerprints</strong>
+            <span class="mono">id PK · imei FK</span>
+            <ul class="plain">
+              <li>w a1 p1 t1</li>
+              <li>a2 p2 t2</li>
+              <li>n_samples</li>
+              <li>published bool</li>
+            </ul>
+          </div>
+        </div>
+        <div class="eq" style="margin-top: 14px;">meters.imei 1—* readings.imei &nbsp;·&nbsp; meters.imei 1—* fingerprints.imei</div>
+      </div>
+    </div>
+
+    <div class="row" style="flex: 1;">
+      <div class="box accent-violet" style="flex: 1;">
+        <h2>Fit path (hourly)</h2>
+        <ul class="plain">
+          <li><b>SELECT</b> readings for each imei where ts ≥ now − 14 d and lm IS NOT NULL</li>
+          <li>Need ≥ 24 samples (FIT_MIN_SAMPLES)</li>
+          <li><b>INSERT fingerprints</b> with fitted coefficients</li>
+          <li><b>UPDATE meters.fp_valid</b> = true</li>
+          <li>After MQTT publish: <b>published</b> = true</li>
+        </ul>
+      </div>
+      <div class="box accent-amber" style="flex: 1;">
+        <h2>Read path (Grafana)</h2>
+        <ul class="plain">
+          <li>Variable <b>$imei</b> from <span class="mono">SELECT imei FROM meters</span></li>
+          <li>Time series: lm, wm, wm_cloud vs ts</li>
+          <li>Stats: MAX(lk), MAX(oc), last tl_ml</li>
+          <li>Table: last 20 fingerprint rows</li>
+          <li>Indexes: (imei, ts DESC), partial lk=1 / oc=1</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>2GWaterMeter · docs/diagrams/02-database-flow.png</span>
+      <span>docker/postgres/init.sql · timezone America/Guatemala</span>
+    </div>
+  </div>
+</body>
+</html>
