@@ -1,0 +1,16 @@
+.pio/
+.vscode/
+.idea/
+*.hex
+*.elf
+*.map
+*.o
+build/
+Thumbs.db
+.DS_Store
+*.apk
+*~
+*.swp
+hardware/cad/exports/*.stl
+hardware/cad/exports/*.step
+hardware/cad/exports/*.stp

@@ -466,11 +466,11 @@ bool SIM800::startNetwork(const char *apn, const char *user, const char *pwd ) {
   }
 
 #ifdef DEBUG
-  if(isRegistered() {
-      Serial.println(F("start network done")));
-    }else{
-      Serial.println(F("start network failed")));
-    }
+  if (isRegistered()) {
+    Serial.println(F("start network done"));
+  } else {
+    Serial.println(F("start network failed"));
+  }
 #endif
 
   return isRegistered();
@@ -738,6 +738,10 @@ bool SIM800::isHttpInitialized() {
   return (state & STATE_HTTPINITIALIZED);
 }
 
+bool SIM800::isTcpConnected() {
+  return (state & STATE_TCPCONNECTED);
+}
+
 
 void SIM800::switchOn() {
   IF_SDEBUG(Serial.println(F("#sim800:switching on")));
@@ -915,6 +919,7 @@ bool SIM800::TCPstop()
   char buf[BUF_LENGTH];
 
   state &= ~STATE_REGISTERED;
+  state &= ~STATE_TCPCONNECTED;
 
   if (!ATcommand("+CIPSHUT", buf,"SHUT OK", ERRORSTR, 65000)) return false;
 
@@ -970,8 +975,7 @@ bool SIM800::TCPconnect(const char* server, int port)
     receive(buf,150000,"\r\n",NULL);
     receive(buf,10000,"\r\n",NULL);
     if (found(buf,"CONNECT")){
-      state |= STATE_HTTPINITIALIZED;
-
+      state |= STATE_TCPCONNECTED;
       return true;
     }
   }
@@ -1000,7 +1004,7 @@ int sim800Client::connect(const char *server, int port)
 
 uint8_t sim800Client::connected()
 {
-  return isHttpInitialized();
+  return isTcpConnected();
 }
 
 int sim800Client::available()
@@ -1093,9 +1097,7 @@ void sim800Client::stop()
   char buf[BUF_LENGTH];
 
   IF_SDEBUG(Serial.println(F("#sim800:stop")));
-  state &= ~STATE_HTTPINITIALIZED;
+  state &= ~STATE_TCPCONNECTED;
   transparentescape();
   ATcommand("+CIPCLOSE=0", buf);
-
-  return;
 }

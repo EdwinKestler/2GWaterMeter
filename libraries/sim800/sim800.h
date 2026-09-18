@@ -21,6 +21,7 @@
 #define STATE_INITIALIZED 2
 #define STATE_REGISTERED 4
 #define STATE_HTTPINITIALIZED 8
+#define STATE_TCPCONNECTED 16
 
 #define ATSTR  "AT"
 #define OKSTR  "OK\r\n"
@@ -56,6 +57,7 @@ class SIM800 {
   bool isInitialized();
   bool isRegistered();
   bool isHttpInitialized();
+  bool isTcpConnected();
 
   void switchOn();
   void switchOff();
