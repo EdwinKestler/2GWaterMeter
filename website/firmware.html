@@ -4,57 +4,106 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Firmware — 2GWaterMeter</title>
+  <link rel="stylesheet" href="css/industry.css">
   <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
-  <nav class="nav">
-    <a class="brand" href="index.html">2GWaterMeter</a>
-    <a href="goal.html">Goal</a>
-    <a href="hardware.html">Hardware</a>
-    <a class="on" href="firmware.html">Firmware</a>
-    <a href="cloud.html">Cloud</a>
-    <a href="signature.html">Fingerprint</a>
-    <a href="portal.html">Portal</a>
-    <a href="https://github.com/EdwinKestler/2GWaterMeter">GitHub</a>
+  <nav class="nav site-nav">
+    <a class="nav-brand" href="index.html">2GWATERMETER</a>
+    <input class="nav-toggle" type="checkbox" id="nav-toggle">
+    <label class="nav-toggle-label" for="nav-toggle" aria-label="Menu">&#8801;</label>
+    <div class="nav-links">
+      <a href="goal.html">Goal</a>
+      <a href="hardware.html">Hardware</a>
+      <a href="firmware.html" aria-current="page">Firmware</a>
+      <a href="cloud.html">Cloud</a>
+      <a href="signature.html">Fingerprint</a>
+      <a href="portal.html">Portal</a>
+    </div>
+    <span class="nav-status"><span class="nav-status-long">lab · 1 meter&nbsp;</span>online</span>
+    <a class="btn btn-secondary" href="https://github.com/EdwinKestler/2GWaterMeter">GitHub ↗</a>
   </nav>
-  <div class="wrap">
-    <div class="kicker">firmware/waterbox</div>
-    <h1>Object-oriented FSM on the Core+</h1>
-    <p class="lead">Pulses are counted in an ISR at all times. The radio comes up about every 60 s to publish, then listens 8 s for valve commands and fingerprint updates, then shuts GPRS.</p>
 
-    <h2>Modules</h2>
-    <table>
-      <thead><tr><th>Class</th><th>Role</th></tr></thead>
+  <main class="wrap">
+    <div class="sheet-head" style="margin-top:40px">
+      <div>
+        <div class="kicker">Sheet 03 · firmware/waterbox</div>
+        <h1>Object-oriented FSM on the Core+</h1>
+      </div>
+      <dl class="sheet-meta">
+        <div><dt>clock</dt><dd>8 MHz</dd></div>
+        <div><dt>board</dt><dd>644pa8m</dd></div>
+        <div><dt>serial</dt><dd>57600</dd></div>
+      </dl>
+    </div>
+
+    <p class="lead" style="margin-top:22px;max-width:70ch">Pulses are counted in an ISR at all times. The radio comes up about every 60 s to publish, then listens 8 s for valve commands and fingerprint updates, then shuts GPRS.</p>
+
+    <div class="blueprint specs" style="--specs-cols:4;margin-top:32px">
+      <div><div class="spec-value">60 s</div><div class="spec-label">publish period</div></div>
+      <div><div class="spec-value">8 s</div><div class="spec-label">listen window</div></div>
+      <div><div class="spec-value">1 h</div><div class="spec-label">heartbeat</div></div>
+      <div><div class="spec-value">25 ms</div><div class="spec-label">valve pulse</div></div>
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    </div>
+
+    <h2 class="section-head">Modules</h2>
+    <table class="table" style="margin-top:14px">
+      <thead><tr><th style="width:210px">Class</th><th>Role</th></tr></thead>
       <tbody>
-        <tr><td>FlowMeter</td><td>D6 ISR, 32-bit pulse total, L/min (245 or 490 p/L)</td></tr>
-        <tr><td>LatchingValve</td><td>L9110 25 ms open/close</td></tr>
-        <tr><td>MeterStore</td><td>EEPROM: pulses, valve, fingerprint + CRC</td></tr>
-        <tr><td>GsmMqttClient</td><td>SIM800 + MQTT; subscribe cmd/fp; publish data/info/hb</td></tr>
-        <tr><td>ConsumptionSignature</td><td>Evaluate W(t); set lk / oc</td></tr>
-        <tr><td>WaterboxFsm</td><td>HaltAuth → WaitModem → Idle → Connect → Publish → Listen → Disconnect</td></tr>
+        <tr><td class="num">FlowMeter</td><td class="text-muted">D6 ISR, 32-bit pulse total, L/min (245 or 490 p/L)</td></tr>
+        <tr><td class="num">LatchingValve</td><td class="text-muted">L9110 25 ms open/close</td></tr>
+        <tr><td class="num">MeterStore</td><td class="text-muted">EEPROM: pulses, valve, fingerprint + CRC</td></tr>
+        <tr><td class="num">GsmMqttClient</td><td class="text-muted">SIM800 + MQTT; subscribe cmd/fp; publish data/info/hb</td></tr>
+        <tr><td class="num">ConsumptionSignature</td><td class="text-muted">Evaluate W(t); set lk / oc</td></tr>
+        <tr><td class="num">WaterboxFsm</td><td class="text-muted">HaltAuth → WaitModem → Idle → Connect → Publish → Listen → Disconnect</td></tr>
       </tbody>
     </table>
 
-    <h2>MQTT (per IMEI)</h2>
-    <table>
-      <thead><tr><th>Topic</th><th>Dir</th><th>Payload</th></tr></thead>
+    <h2 class="section-head">MQTT, per IMEI</h2>
+    <table class="table" style="margin-top:14px">
+      <thead><tr><th style="width:250px">Topic</th><th style="width:60px">Dir</th><th>Payload</th></tr></thead>
       <tbody>
-        <tr><td><code>waterbox/&lt;IMEI&gt;/data</code></td><td>out</td><td>lm, mls, tl_ml, ts, v, wm, lk, oc</td></tr>
-        <tr><td><code>waterbox/&lt;IMEI&gt;/info</code></td><td>out</td><td>ppl, reed, v, fp</td></tr>
-        <tr><td><code>waterbox/&lt;IMEI&gt;/hb</code></td><td>out</td><td>hourly health: up, rssi, ok, valve, totals</td></tr>
-        <tr><td><code>waterbox/&lt;IMEI&gt;/cmd</code></td><td>in</td><td>on / open / 1 or off / close / 0 or {"v":1}</td></tr>
-        <tr><td><code>waterbox/&lt;IMEI&gt;/fp</code></td><td>in</td><td>retained fingerprint JSON w,a1,p1,a2,p2,t1,t2</td></tr>
+        <tr><td class="num">waterbox/&lt;IMEI&gt;/data</td><td>out</td><td class="text-muted">lm, mls, tl_ml, ts, v, wm, lk, oc</td></tr>
+        <tr><td class="num">waterbox/&lt;IMEI&gt;/info</td><td>out</td><td class="text-muted">ppl, reed, v, fp</td></tr>
+        <tr><td class="num">waterbox/&lt;IMEI&gt;/hb</td><td>out</td><td class="text-muted">hourly health: up, rssi, ok, valve, totals</td></tr>
+        <tr><td class="num">waterbox/&lt;IMEI&gt;/cmd</td><td>in</td><td class="text-muted">on / open / 1 · off / close / 0 · {"v":1}</td></tr>
+        <tr><td class="num">waterbox/&lt;IMEI&gt;/fp</td><td>in</td><td class="text-muted">retained fingerprint JSON w, a1, p1, a2, p2, t1, t2</td></tr>
       </tbody>
     </table>
-    <p class="muted">Commands and fingerprints only arrive during the 8 s listen window. Keep <code>fp</code> retained on the broker. Lab MQTT user/pass: <code>waterbox</code> / <code>waterbox</code>. Set <code>mqttServer</code> to the LAN IP of the Compose host — not localhost.</p>
 
-    <h2>Lab clock</h2>
-    <p>This Core+ is <strong>8 MHz</strong> (actual UART was half of 57600 when built as 16 MHz). PlatformIO board is <code>644pa8m</code>, upload and serial both 57600.</p>
+    <div class="grid-2" style="margin-top:30px">
+      <div class="card blueprint">
+        <div class="card-kicker">the 8 s window</div>
+        <div class="card-title">Commands only land while the radio is up</div>
+        <p class="card-body">Commands and fingerprints arrive during the listen window alone. Keep <code>fp</code> retained on the broker so a device that missed a window still gets the current coefficients on its next connect.</p>
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      </div>
+      <div class="card blueprint">
+        <div class="card-kicker">lab broker</div>
+        <div class="card-title">Point at the LAN IP, not localhost</div>
+        <p class="card-body">Lab MQTT user and pass are both <code>waterbox</code>. Set <code>mqttServer</code> to the LAN address of the Compose host — the meter is not on that host.</p>
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      </div>
+    </div>
 
-    <div class="footer">
+    <figure style="margin-top:34px">
+      <div class="blueprint diagram">
+        <img src="diagrams/03-mqtt-flow.png" alt="MQTT topics and the 8-second listen window">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      </div>
+      <figcaption style="margin-top:8px">Device session: connect, subscribe cmd + fp, publish data/info/(hb), listen 8 s, disconnect.</figcaption>
+    </figure>
+
+    <div class="callout" style="margin-top:34px">
+      <span class="tag tag-outline">Lab clock</span>
+      <p>This Core+ runs at <strong>8 MHz</strong> — the actual UART came out at half of 57600 when the firmware was built as 16 MHz. PlatformIO board is <code>644pa8m</code>; upload and serial are both 57600.</p>
+    </div>
+
+    <div class="site-footer">
       <span>Source: firmware/waterbox, docs/WIRING.md</span>
       <a href="index.html">Home</a>
     </div>
-  </div>
+  </main>
 </body>
 </html>

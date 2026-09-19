@@ -4,65 +4,100 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Goal — 2GWaterMeter</title>
+  <link rel="stylesheet" href="css/industry.css">
   <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
-  <nav class="nav">
-    <a class="brand" href="index.html">2GWaterMeter</a>
-    <a class="on" href="goal.html">Goal</a>
-    <a href="hardware.html">Hardware</a>
-    <a href="firmware.html">Firmware</a>
-    <a href="cloud.html">Cloud</a>
-    <a href="signature.html">Fingerprint</a>
-    <a href="portal.html">Portal</a>
-    <a href="https://github.com/EdwinKestler/2GWaterMeter">GitHub</a>
+  <nav class="nav site-nav">
+    <a class="nav-brand" href="index.html">2GWATERMETER</a>
+    <input class="nav-toggle" type="checkbox" id="nav-toggle">
+    <label class="nav-toggle-label" for="nav-toggle" aria-label="Menu">&#8801;</label>
+    <div class="nav-links">
+      <a href="goal.html" aria-current="page">Goal</a>
+      <a href="hardware.html">Hardware</a>
+      <a href="firmware.html">Firmware</a>
+      <a href="cloud.html">Cloud</a>
+      <a href="signature.html">Fingerprint</a>
+      <a href="portal.html">Portal</a>
+    </div>
+    <span class="nav-status"><span class="nav-status-long">lab · 1 meter&nbsp;</span>online</span>
+    <a class="btn btn-secondary" href="https://github.com/EdwinKestler/2GWaterMeter">GitHub ↗</a>
   </nav>
-  <div class="wrap">
-    <div class="kicker">Why the project exists</div>
-    <h1>Autonomous urban water utilities</h1>
-    <p class="lead">Empagua / Flatbox / MIT Solve: generate a household consumption signature from real flow, then detect leakage and overuse without waiting for a monthly bill.</p>
 
-    <figure>
-      <img src="docs-img/WATERBOX_finalist.png" alt="WATERBOX MIT Solve finalist graphic" onerror="this.style.display='none'">
-      <figcaption>WATERBOX as presented for MIT Solve / Empagua (from docs/).</figcaption>
-    </figure>
-
-    <figure>
-      <img src="illustrations/consumption-fingerprint.jpg" alt="Glowing 24-hour usage ribbon over a city with a night leak filament">
-      <figcaption>The signature is two sines (24 h and 12 h) plus a mean. Night flow above that curve is treated as loss on the owner site.</figcaption>
-    </figure>
-
-    <h2>The model</h2>
-    <div class="eq">W(t) = w̄ + A₁ sin(2π t / T₁ + φ₁) + A₂ sin(2π t / T₂ + φ₂)</div>
-    <p class="muted">T₁ = 24 h, T₂ = 12 h, t = hour of day. Cloud fits the coefficients; the meter only evaluates W(t). That split keeps the ATmega644PA small and puts the “ML” (harmonic regression, not a neural net) in Python.</p>
-
-    <div class="grid2">
-      <div class="card">
-        <h3>On the owner site (slide B)</h3>
-        <p class="muted">If hour is 00:00–05:00 and live flow &gt; W(t) + 0.15 L/min → <strong>lk = 1</strong> (night leak).</p>
+  <main class="wrap">
+    <div class="sheet-head" style="margin-top:40px">
+      <div>
+        <div class="kicker">Sheet 01 · why the project exists</div>
+        <h1>Autonomous urban water utilities</h1>
       </div>
-      <div class="card">
-        <h3>Human-behaviour excess</h3>
-        <p class="muted">Daytime flow &gt; W(t) + 0.50 L/min → <strong>oc = 1</strong> (overconsumption).</p>
+      <dl class="sheet-meta">
+        <div><dt>programme</dt><dd>MIT Solve</dd></div>
+        <div><dt>partner</dt><dd>Empagua</dd></div>
+        <div><dt>scale</dt><dd class="is-flagged">one house</dd></div>
+      </dl>
+    </div>
+
+    <p class="lead" style="margin-top:22px;max-width:70ch">Generate a household consumption signature from real flow, then detect leakage and overuse without waiting for a monthly bill.</p>
+
+    <figure style="margin-top:30px">
+      <div class="blueprint duotone plate">
+        <img src="illustrations/consumption-fingerprint.jpg" alt="Glowing 24-hour usage ribbon over a city with a night leak filament">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      </div>
+      <figcaption style="margin-top:8px">The signature is two sines (24 h and 12 h) plus a mean. Night flow above that curve is treated as loss on the owner site.</figcaption>
+    </figure>
+
+    <h2 class="section-head">The model</h2>
+    <div class="blueprint eq" style="margin-top:18px">
+      W(t) = w̄ + A₁ sin(2π t / T₁ + φ₁) + A₂ sin(2π t / T₂ + φ₂)
+      <p class="eq-note">T₁ = 24 h · T₂ = 12 h · t = hour of day</p>
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    </div>
+    <p class="text-muted" style="margin-top:14px;max-width:72ch">The cloud fits the coefficients; the meter only evaluates W(t). That split keeps the ATmega644PA small and puts the “ML” — harmonic regression, not a neural net — in Python.</p>
+
+    <div class="grid-2" style="margin-top:24px">
+      <div class="card blueprint">
+        <div class="card-kicker">slide B · owner site</div>
+        <div class="card-title">Night leak</div>
+        <p class="card-body">Hour in 00:00–05:00 and live flow &gt; W(t) + 0.15 L/min → <strong>lk = 1</strong>.</p>
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      </div>
+      <div class="card blueprint">
+        <div class="card-kicker">human behaviour</div>
+        <div class="card-title">Overconsumption</div>
+        <p class="card-body">Daytime flow &gt; W(t) + 0.50 L/min → <strong>oc = 1</strong>.</p>
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
       </div>
     </div>
-    <p class="muted">Pipe-network loss (slide C) needs more than one meter and stays in the cloud / Grafana.</p>
+    <p class="text-muted" style="margin-top:14px">Pipe-network loss (slide C) needs more than one meter and stays in the cloud / Grafana.</p>
 
-    <h2>What is in scope for the lab</h2>
-    <ul class="muted">
+    <h2 class="section-head">What is in scope for the lab</h2>
+    <ul class="list-plain" style="margin-top:14px">
       <li>One house, one IMEI, Docker Compose on a lab PC.</li>
       <li>Same Postgres for MQTT ingest, fingerprints, and household login.</li>
       <li>Household UI on the portal; Grafana for the operator.</li>
     </ul>
 
-    <h2>2G end of life</h2>
-    <p>The radio is a SIM800 on GSM/GPRS (original APN <span class="mono" style="padding:2px 6px">m2mgt.tigo.com</span>). That was reasonable in 2016. A field product needs a carrier sunset letter and a path to LTE-M / NB-IoT or LoRaWAN. Hydraulics (RPE body + latching valve) can stay; <code>sim800</code> and the MQTT client go together when the radio changes.</p>
-    <p><a href="https://github.com/EdwinKestler/2GWaterMeter/blob/master/docs/2G-EOL.md">Full 2G-EOL note on GitHub</a></p>
+    <figure style="margin-top:34px">
+      <div class="blueprint diagram">
+        <img src="docs-img/WATERBOX_finalist.png" alt="WATERBOX MIT Solve finalist graphic" onerror="this.closest('figure').style.display='none'">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      </div>
+      <figcaption style="margin-top:8px">WATERBOX as presented for MIT Solve / Empagua.</figcaption>
+    </figure>
 
-    <div class="footer">
+    <h2 class="section-head" id="eol">2G end of life</h2>
+    <p style="max-width:72ch">The radio is a SIM800 on GSM/GPRS (original APN <code>m2mgt.tigo.com</code>). That was reasonable in 2016. A field product needs a carrier sunset letter and a path to LTE-M / NB-IoT or LoRaWAN. Hydraulics — RPE body and latching valve — can stay; <code>sim800</code> and the MQTT client go together when the radio changes.</p>
+
+    <div class="callout" style="margin-top:24px">
+      <span class="tag tag-outline">Before you build</span>
+      <p>Do not buy SIMs or enclosures against this design without checking the 2G sunset date in your market first. <a href="https://github.com/EdwinKestler/2GWaterMeter/blob/master/docs/2G-EOL.md">Full 2G-EOL note on GitHub</a>.</p>
+    </div>
+
+    <div class="site-footer">
       <span>Source notes: docs/SIGNATURE.md, docs/2G-EOL.md</span>
       <a href="index.html">Home</a>
     </div>
-  </div>
+  </main>
 </body>
 </html>
