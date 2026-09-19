@@ -13,7 +13,7 @@ type Point = {
   address?: string | null;
 };
 
-const COLORS = { below: "#5b8def", normal: "#5dce8a", above: "#e05a5a" };
+const COLORS = { below: "#94bce3", normal: "#5980a6", above: "#1d2d3d" };
 
 function Recenter({ lat, lon }: { lat: number; lon: number }) {
   const map = useMap();
@@ -36,13 +36,16 @@ export function HeatMap({
   const lon = center?.lon ?? Number(process.env.NEXT_PUBLIC_MAP_CENTER_LON || -90.5069);
   return (
     <MapContainer center={[lat, lon]} zoom={13} scrollWheelZoom className="leaflet-container">
-      <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <TileLayer
+        attribution='&copy; OpenStreetMap &copy; CARTO'
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+      />
       {center ? <Recenter lat={center.lat} lon={center.lon} /> : null}
       {center ? (
         <Circle
           center={[center.lat, center.lon]}
           radius={radius_m}
-          pathOptions={{ color: "#3ec6c9", fillOpacity: 0.08 }}
+          pathOptions={{ color: "#5980a6", fillColor: "#5980a6", fillOpacity: 0.08, weight: 1 }}
         />
       ) : null}
       {points.map((p) => (

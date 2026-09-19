@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ConsumptionChart } from "@/components/ConsumptionChart";
 import { FingerprintChart } from "@/components/FingerprintChart";
 import { HeatMapLoader } from "@/components/HeatMapLoader";
+import { Corners } from "@/components/Corners";
+import { SiteNav } from "@/components/SiteNav";
 
 type Meter = {
   imei: string;
@@ -32,8 +34,20 @@ export default function AppPage() {
     []
   );
   const [heat, setHeat] = useState<{
-    points: { imei: string; lat: number; lon: number; liters: number; band: "below" | "normal" | "above" }[];
-    geofence: { lat: number; lon: number; radius_m: number; peer_count: number; peer_avg_liters: number | null } | null;
+    points: {
+      imei: string;
+      lat: number;
+      lon: number;
+      liters: number;
+      band: "below" | "normal" | "above";
+    }[];
+    geofence: {
+      lat: number;
+      lon: number;
+      radius_m: number;
+      peer_count: number;
+      peer_avg_liters: number | null;
+    } | null;
   } | null>(null);
   const [address, setAddress] = useState("");
   const [geofence, setGeofence] = useState("500");
@@ -107,119 +121,187 @@ export default function AppPage() {
   const selfPoint = heat?.points.find((p) => p.imei === imei);
 
   return (
-    <div className="wrap">
-      <div className="top">
-        <div>
-          <div className="kicker">Household portal</div>
-          <h1>Your water use</h1>
-          <p className="muted">{email}</p>
-        </div>
-        <div className="nav">
-          <select value={imei} onChange={(e) => setImei(e.target.value)}>
-            {meters.map((m) => (
-              <option key={m.imei} value={m.imei}>
-                {m.label || m.imei}
-              </option>
-            ))}
-          </select>
-          <button className="ghost" onClick={logout} type="button">
-            Log out
-          </button>
-        </div>
-      </div>
-
-      <div className="row">
-        <div className="card stat">
-          <span className="muted">Period volume</span>
-          <b>{total.toFixed(1)} L</b>
-        </div>
-        <div className="card stat">
-          <span className="muted">Valve</span>
-          <b>{selected?.valve ? "open" : "closed"}</b>
-        </div>
-        <div className="card stat">
-          <span className="muted">Fingerprint</span>
-          <b>{selected?.fp_valid ? "loaded" : "none"}</b>
-        </div>
-        <div className="card stat">
-          <span className="muted">This month vs city</span>
-          <b>{selfPoint ? selfPoint.band : "—"}</b>
-        </div>
-      </div>
-
-      <div className="tabs">
-        <button className={tab === "use" ? "on" : ""} type="button" onClick={() => setTab("use")}>
-          Consumption
+    <>
+      <SiteNav current="app" status="lab · 1 meter online">
+        <select className="input" style={{ width: "auto", minWidth: 180 }} value={imei} onChange={(e) => setImei(e.target.value)}>
+          {meters.map((m) => (
+            <option key={m.imei} value={m.imei}>
+              {m.label || m.imei}
+            </option>
+          ))}
+        </select>
+        <button className="btn btn-secondary" onClick={logout} type="button">
+          Log out
         </button>
-        <button className={tab === "fp" ? "on" : ""} type="button" onClick={() => setTab("fp")}>
-          Monthly fingerprint
-        </button>
-        <button className={tab === "map" ? "on" : ""} type="button" onClick={() => setTab("map")}>
-          Map & geofence
-        </button>
-      </div>
+      </SiteNav>
 
-      {tab === "use" ? (
-        <div className="card">
-          <div className="tabs">
-            {(["hourly", "daily", "weekly", "monthly"] as Range[]).map((r) => (
-              <button key={r} className={range === r ? "on" : ""} type="button" onClick={() => setRange(r)}>
-                {r}
-              </button>
-            ))}
+      <div className="wrap">
+        <header className="sheet-head">
+          <div>
+            <div className="kicker">Household portal</div>
+            <h1>Your water use</h1>
           </div>
-          {series.length ? <ConsumptionChart data={series} /> : <p className="muted">No readings yet for this IMEI.</p>}
-        </div>
-      ) : null}
-
-      {tab === "fp" ? (
-        <div className="card">
-          <p className="muted">
-            W(t) = mean + daily sine + 12-hour sine. Each line is the latest fingerprint in that month.
-          </p>
-          {months.length ? <FingerprintChart months={months} /> : <p className="muted">No fingerprint yet. The cloud worker publishes after enough samples.</p>}
-        </div>
-      ) : null}
-
-      {tab === "map" ? (
-        <>
-          <form className="card" onSubmit={saveAddress}>
-            <label>Service address</label>
-            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Street, zone, Guatemala City" />
-            <label>Geofence radius (meters)</label>
-            <input value={geofence} onChange={(e) => setGeofence(e.target.value)} type="number" min={50} max={20000} />
-            <div style={{ marginTop: 12 }}>
-              <button type="submit">Geocode & save</button>
+          <dl className="sheet-meta">
+            <div>
+              <dt>Account</dt>
+              <dd>{email || "—"}</dd>
             </div>
-            {msg ? <p className="muted">{msg}</p> : null}
+            <div>
+              <dt>IMEI</dt>
+              <dd>{imei || "—"}</dd>
+            </div>
+          </dl>
+        </header>
+
+        <div className="blueprint specs">
+          <div>
+            <div className="spec-value">{total.toFixed(0)}</div>
+            <div className="spec-label">L this period</div>
+          </div>
+          <div>
+            <div className="spec-value">{selected?.valve ? "open" : "closed"}</div>
+            <div className="spec-label">Valve</div>
+          </div>
+          <div>
+            <div className="spec-value">{selected?.fp_valid ? "loaded" : "none"}</div>
+            <div className="spec-label">Fingerprint</div>
+          </div>
+          <div>
+            <div className="spec-value">{selfPoint ? selfPoint.band : "—"}</div>
+            <div className="spec-label">vs city median</div>
+          </div>
+          <Corners />
+        </div>
+
+        <div className="seg" role="tablist">
+          <label className="seg-opt">
+            <input type="radio" name="tab" checked={tab === "use"} onChange={() => setTab("use")} />
+            Consumption
+          </label>
+          <label className="seg-opt">
+            <input type="radio" name="tab" checked={tab === "fp"} onChange={() => setTab("fp")} />
+            Monthly fingerprint
+          </label>
+          <label className="seg-opt">
+            <input type="radio" name="tab" checked={tab === "map"} onChange={() => setTab("map")} />
+            Map &amp; geofence
+          </label>
+        </div>
+
+        {tab === "use" ? (
+          <div className="blueprint chart-panel" style={{ marginTop: 22 }}>
+            <Corners />
+            <div className="chart-head">
+              <div className="chart-title">Volume</div>
+              <div className="seg">
+                {(["hourly", "daily", "weekly", "monthly"] as Range[]).map((r) => (
+                  <label className="seg-opt" key={r}>
+                    <input type="radio" name="range" checked={range === r} onChange={() => setRange(r)} />
+                    {r}
+                  </label>
+                ))}
+              </div>
+            </div>
+            {series.length ? (
+              <ConsumptionChart data={series} />
+            ) : (
+              <p className="muted">No readings yet for this IMEI.</p>
+            )}
+          </div>
+        ) : null}
+
+        {tab === "fp" ? (
+          <div className="blueprint chart-panel" style={{ marginTop: 22 }}>
+            <Corners />
+            <div className="chart-head">
+              <div className="chart-title">W(t) overlay</div>
+            </div>
+            <p className="eq-note">Mean + 24 h sine + 12 h sine · one line per month</p>
+            {months.length ? (
+              <FingerprintChart months={months} />
+            ) : (
+              <p className="muted">No fingerprint yet. The cloud worker publishes after enough samples.</p>
+            )}
+          </div>
+        ) : null}
+
+        {tab === "map" ? (
+          <>
+            <form className="blueprint chart-panel" style={{ marginTop: 22 }} onSubmit={saveAddress}>
+              <Corners />
+              <div className="chart-title" style={{ marginBottom: 12 }}>
+                Service address
+              </div>
+              <div className="field">
+                <label htmlFor="address">Street</label>
+                <input
+                  className="input"
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Street, zone, Guatemala City"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="geofence">Geofence radius (meters)</label>
+                <input
+                  className="input"
+                  id="geofence"
+                  value={geofence}
+                  onChange={(e) => setGeofence(e.target.value)}
+                  type="number"
+                  min={50}
+                  max={20000}
+                />
+              </div>
+              <button className="btn btn-primary" type="submit">
+                Geocode &amp; save
+              </button>
+              {msg ? <p className="muted">{msg}</p> : null}
+            </form>
             {heat?.geofence ? (
-              <p className="muted">
-                {heat.geofence.peer_count <= 1
-                  ? "Lab mode: only your meter is on the map, so the band is relative to yourself (normal). Neighbors appear when more IMEIs register."
-                  : `${heat.geofence.peer_count} meters in your fence${
-                      heat.geofence.peer_avg_liters != null
-                        ? ` · neighborhood average ${heat.geofence.peer_avg_liters.toFixed(1)} L this month`
-                        : ""
-                    }`}
-              </p>
+              <div className="callout">
+                <span className="tag tag-accent">geofence</span>
+                <p>
+                  {heat.geofence.peer_count <= 1
+                    ? "Lab mode: only your meter is on the map, so the band is relative to yourself (normal). Neighbors appear when more IMEIs register."
+                    : `${heat.geofence.peer_count} meters in your fence${
+                        heat.geofence.peer_avg_liters != null
+                          ? ` · neighborhood average ${heat.geofence.peer_avg_liters.toFixed(1)} L this month`
+                          : ""
+                      }`}
+                </p>
+              </div>
             ) : (
               <p className="muted">Save an address to place your meter on the map.</p>
             )}
-          </form>
-          <div className="card">
-            <p className="legend muted">
-              <span className="dot-below" /> below average &nbsp;
-              <span className="dot-normal" /> normal &nbsp;
-              <span className="dot-above" /> above average
-            </p>
-            <HeatMapLoader
-              points={heat?.points || []}
-              center={heat?.geofence ? { lat: heat.geofence.lat, lon: heat.geofence.lon } : null}
-              radius_m={heat?.geofence?.radius_m || Number(geofence) || 500}
-            />
-          </div>
-        </>
-      ) : null}
-    </div>
+            <div className="blueprint chart-panel">
+              <Corners />
+              <p className="legend">
+                <span>
+                  <i className="dot-below" /> below average
+                </span>
+                <span>
+                  <i className="dot-normal" /> normal
+                </span>
+                <span>
+                  <i className="dot-above" /> above average
+                </span>
+              </p>
+              <HeatMapLoader
+                points={heat?.points || []}
+                center={heat?.geofence ? { lat: heat.geofence.lat, lon: heat.geofence.lon } : null}
+                radius_m={heat?.geofence?.radius_m || Number(geofence) || 500}
+              />
+            </div>
+          </>
+        ) : null}
+
+        <div className="site-footer">
+          <span>2GWaterMeter · GPL-3.0</span>
+          <span>Industry blueprint · same tokens as the Pages site</span>
+        </div>
+      </div>
+    </>
   );
 }

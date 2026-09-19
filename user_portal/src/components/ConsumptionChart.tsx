@@ -9,6 +9,7 @@ import {
   YAxis,
   CartesianGrid
 } from "recharts";
+import { chartTheme, tooltipStyle } from "@/lib/chartTheme";
 
 export function ConsumptionChart({
   data
@@ -22,15 +23,23 @@ export function ConsumptionChart({
   return (
     <div className="chart">
       <ResponsiveContainer>
-        <LineChart data={rows}>
-          <CartesianGrid stroke="#2a3644" />
-          <XAxis dataKey="label" stroke="#8d9aaa" tick={{ fontSize: 11 }} />
-          <YAxis stroke="#8d9aaa" tick={{ fontSize: 11 }} />
-          <Tooltip
-            contentStyle={{ background: "#151c25", border: "1px solid #2a3644" }}
-            formatter={(v: number) => [`${v.toFixed(2)} L`, "volume"]}
+        <LineChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid stroke={chartTheme.grid} strokeDasharray="0" vertical={false} />
+          <XAxis
+            dataKey="label"
+            stroke={chartTheme.tick}
+            tick={{ fontSize: 11, fontFamily: "Barlow, system-ui", fill: chartTheme.tick }}
+            axisLine={{ stroke: chartTheme.grid }}
+            tickLine={false}
           />
-          <Line type="monotone" dataKey="liters" stroke="#3ec6c9" dot={false} strokeWidth={2} />
+          <YAxis
+            stroke={chartTheme.tick}
+            tick={{ fontSize: 11, fontFamily: "Barlow, system-ui", fill: chartTheme.tick }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v.toFixed(2)} L`, "volume"]} />
+          <Line type="monotone" dataKey="liters" stroke={chartTheme.accent} dot={false} strokeWidth={1.75} />
         </LineChart>
       </ResponsiveContainer>
     </div>

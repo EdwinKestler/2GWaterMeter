@@ -1,8 +1,9 @@
+import "@/styles/industry.css";
 import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Waterbox portal",
+  title: "2GWaterMeter portal",
   description: "Household water consumption, fingerprint, and map"
 };
 

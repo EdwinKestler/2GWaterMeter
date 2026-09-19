@@ -10,8 +10,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-
-const COLORS = ["#3ec6c9", "#5b8def", "#e8a838", "#9b7dff", "#5dce8a", "#e05a5a"];
+import { chartTheme, tooltipStyle } from "@/lib/chartTheme";
 
 type Month = { month: string; curve: { hour: number; lm: number }[] };
 
@@ -32,14 +31,34 @@ export function FingerprintChart({ months }: { months: Month[] }) {
   return (
     <div className="chart">
       <ResponsiveContainer>
-        <LineChart data={data}>
-          <CartesianGrid stroke="#2a3644" />
-          <XAxis dataKey="hour" stroke="#8d9aaa" tick={{ fontSize: 11 }} />
-          <YAxis stroke="#8d9aaa" tick={{ fontSize: 11 }} />
-          <Tooltip contentStyle={{ background: "#151c25", border: "1px solid #2a3644" }} />
-          <Legend />
+        <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid stroke={chartTheme.grid} vertical={false} />
+          <XAxis
+            dataKey="hour"
+            stroke={chartTheme.tick}
+            tick={{ fontSize: 11, fontFamily: "Barlow, system-ui", fill: chartTheme.tick }}
+            axisLine={{ stroke: chartTheme.grid }}
+            tickLine={false}
+          />
+          <YAxis
+            stroke={chartTheme.tick}
+            tick={{ fontSize: 11, fontFamily: "Barlow, system-ui", fill: chartTheme.tick }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip contentStyle={tooltipStyle} />
+          <Legend
+            wrapperStyle={{ fontFamily: "Barlow Condensed, system-ui", fontSize: 12, letterSpacing: "0.06em" }}
+          />
           {keys.map((key, i) => (
-            <Line key={key} type="monotone" dataKey={key} stroke={COLORS[i % COLORS.length]} dot={false} />
+            <Line
+              key={key}
+              type="monotone"
+              dataKey={key}
+              stroke={chartTheme.series[i % chartTheme.series.length]}
+              dot={false}
+              strokeWidth={1.6}
+            />
           ))}
         </LineChart>
       </ResponsiveContainer>
