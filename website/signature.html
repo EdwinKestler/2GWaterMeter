@@ -4,60 +4,161 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fingerprint — 2GWaterMeter</title>
+  <link rel="stylesheet" href="css/industry.css">
   <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
-  <nav class="nav">
-    <a class="brand" href="index.html">2GWaterMeter</a>
-    <a href="goal.html">Goal</a>
-    <a href="hardware.html">Hardware</a>
-    <a href="firmware.html">Firmware</a>
-    <a href="cloud.html">Cloud</a>
-    <a class="on" href="signature.html">Fingerprint</a>
-    <a href="portal.html">Portal</a>
-    <a href="https://github.com/EdwinKestler/2GWaterMeter">GitHub</a>
+  <nav class="nav site-nav">
+    <a class="nav-brand" href="index.html">2GWATERMETER</a>
+    <input class="nav-toggle" type="checkbox" id="nav-toggle">
+    <label class="nav-toggle-label" for="nav-toggle" aria-label="Menu">&#8801;</label>
+    <div class="nav-links">
+      <a href="goal.html">Goal</a>
+      <a href="hardware.html">Hardware</a>
+      <a href="firmware.html">Firmware</a>
+      <a href="cloud.html">Cloud</a>
+      <a href="signature.html" aria-current="page">Fingerprint</a>
+      <a href="portal.html">Portal</a>
+    </div>
+    <span class="nav-status"><span class="nav-status-long">lab · 1 meter&nbsp;</span>online</span>
+    <a class="btn btn-secondary" href="https://github.com/EdwinKestler/2GWaterMeter">GitHub ↗</a>
   </nav>
-  <div class="wrap">
-    <div class="kicker">Consumption signature</div>
-    <h1>Cloud fits. The meter only evaluates.</h1>
-    <div class="eq">W(t) = w̄ + A₁ sin(2π t / 24 + φ₁) + A₂ sin(2π t / 12 + φ₂)</div>
 
-    <figure>
-      <img src="diagrams/04-ml-analysis-flow.png" alt="Python least-squares fingerprint pipeline">
-      <figcaption>Assemble hour-of-day samples → 5×5 normal equations → store + MQTT retain → onboard lk/oc.</figcaption>
-    </figure>
+  <main class="wrap">
+    <div style="padding-top:40px">
+      <div class="kicker">Two-harmonic signature · topic …/fp (retained)</div>
+      <h1 style="font-size:46px;margin:14px 0 10px;max-width:22ch">Five numbers describe a household's day.</h1>
+      <p style="font-size:16px;max-width:66ch;color:color-mix(in srgb,var(--color-text) 72%,transparent)">The cloud fits the model once an hour and publishes the coefficients back. Everything below the fold happens on an 8-bit MCU with no floating-point unit to spare.</p>
+    </div>
 
-    <h2>MQTT keys</h2>
-    <table>
-      <thead><tr><th>Symbol</th><th>JSON</th><th>Meaning</th></tr></thead>
-      <tbody>
-        <tr><td>w̄</td><td>w</td><td>Mean use (L/min)</td></tr>
-        <tr><td>A₁, φ₁</td><td>a1, p1</td><td>Daily harmonic</td></tr>
-        <tr><td>T₁</td><td>t1</td><td>24 hours</td></tr>
-        <tr><td>A₂, φ₂</td><td>a2, p2</td><td>Twice-daily harmonic</td></tr>
-        <tr><td>T₂</td><td>t2</td><td>12 hours</td></tr>
-      </tbody>
-    </table>
-    <pre>waterbox/&lt;IMEI&gt;/fp
-{"w":0.42,"a1":0.31,"p1":-0.40,"a2":0.12,"p2":1.10,"t1":24,"t2":12}</pre>
+    <div class="blueprint eq" style="margin:26px 0 0">
+      W(t) = w̄ + A₁·sin(2π/T₁ · t + φ₁) + A₂·sin(2π/T₂ · t + φ₂)
+      <p class="eq-note">T₁ = 24 h · T₂ = 12 h · fit by least squares on <code>readings</code></p>
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    </div>
 
-    <h2>Onboard verdicts</h2>
-    <div class="grid2">
-      <div class="card">
-        <h3>Night leak · lk=1</h3>
-        <p class="muted">Hour in [00:00, 05:00) and lm &gt; W(t) + 0.15 L/min. Slide B: unknown night water on the owner site.</p>
+    <div class="chart-layout" style="margin-top:34px">
+      <div class="blueprint chart-panel">
+        <div class="chart-head">
+          <div class="chart-title">IMEI 861234049577123 · last 24 h</div>
+          <div class="chart-legend">
+            <span><i class="swatch-line"></i>model W(t)</span>
+            <span><i class="swatch-bar"></i>measured L/h</span>
+            <span><i class="swatch-band"></i>±2.4 band</span>
+          </div>
+        </div>
+        <svg class="chart-svg" viewBox="0 0 1000 300" role="img" aria-label="Measured hourly flow against the fitted two-harmonic model over 24 hours, with a night leak flagged between 02:00 and 05:00">
+          <g stroke="var(--color-divider)" stroke-width="1">
+            <line x1="0" y1="0" x2="1000" y2="0"></line><line x1="0" y1="65" x2="1000" y2="65"></line><line x1="0" y1="130" x2="1000" y2="130"></line><line x1="0" y1="195" x2="1000" y2="195"></line><line x1="0" y1="260" x2="1000" y2="260"></line>
+          </g>
+          <rect x="0" y="0" width="250" height="260" fill="var(--color-accent)" opacity=".06"></rect>
+          <text x="8" y="16" font-family="Barlow" font-size="11" fill="rgba(29,31,32,.5)" letter-spacing="1.4">NIGHT WINDOW 00:00–06:00</text>
+          <g fill="var(--color-accent-300)"><rect x="6.0" y="174.2" width="29.7" height="85.8"/><rect x="47.7" y="187.9" width="29.7" height="72.1"/><rect x="89.3" y="181" width="29.7" height="79.0"/><rect x="131.0" y="181.1" width="29.7" height="78.9"/><rect x="172.7" y="203.1" width="29.7" height="56.9"/><rect x="214.3" y="197.7" width="29.7" height="62.3"/><rect x="256.0" y="182" width="29.7" height="78.0"/><rect x="297.7" y="200.9" width="29.7" height="59.1"/><rect x="339.3" y="152.8" width="29.7" height="107.2"/><rect x="381.0" y="129.9" width="29.7" height="130.1"/><rect x="422.7" y="108.4" width="29.7" height="151.6"/><rect x="464.3" y="56.2" width="29.7" height="203.8"/><rect x="506.0" y="39.8" width="29.7" height="220.2"/><rect x="547.7" y="43.6" width="29.7" height="216.4"/><rect x="589.3" y="31.3" width="29.7" height="228.7"/><rect x="631.0" y="72" width="29.7" height="188.0"/><rect x="672.7" y="82.7" width="29.7" height="177.3"/><rect x="714.3" y="100.9" width="29.7" height="159.1"/><rect x="756.0" y="151.3" width="29.7" height="108.7"/><rect x="797.7" y="158" width="29.7" height="102.0"/><rect x="839.3" y="194" width="29.7" height="66.0"/><rect x="881.0" y="181.2" width="29.7" height="78.8"/><rect x="922.7" y="175.4" width="29.7" height="84.6"/><rect x="964.3" y="186" width="29.7" height="74.0"/></g>
+          <path d="M0 149.3 L8.3 148.7 L16.7 148.3 L25 148.1 L33.3 147.9 L41.7 148 L50 148.2 L58.3 148.6 L66.7 149.1 L75 149.9 L83.3 150.8 L91.7 151.8 L100 153.1 L108.3 154.4 L116.7 155.9 L125 157.4 L133.3 159 L141.7 160.7 L150 162.4 L158.3 164 L166.7 165.6 L175 167.2 L183.3 168.6 L191.7 169.9 L200 171 L208.3 171.9 L216.7 172.5 L225 172.9 L233.3 173 L241.7 172.7 L250 172.1 L258.3 171.2 L266.7 169.9 L275 168.1 L283.3 166 L291.7 163.5 L300 160.5 L308.3 157.2 L316.7 153.4 L325 149.2 L333.3 144.7 L341.7 139.8 L350 134.6 L358.3 129.1 L366.7 123.3 L375 117.2 L383.3 111 L391.7 104.5 L400 98 L408.3 91.3 L416.7 84.7 L425 78 L433.3 71.4 L441.7 64.9 L450 58.5 L458.3 52.3 L466.7 46.4 L475 40.7 L483.3 35.4 L491.7 30.4 L500 25.8 L508.3 21.7 L516.7 18 L525 14.9 L533.3 12.2 L541.7 10.1 L550 8.5 L558.3 7.5 L566.7 7 L575 7.1 L583.3 7.8 L591.7 9 L600 10.8 L608.3 13 L616.7 15.8 L625 19.1 L633.3 22.8 L641.7 26.9 L650 31.4 L658.3 36.3 L666.7 41.4 L675 46.8 L683.3 52.4 L691.7 58.2 L700 64.2 L708.3 70.2 L716.7 76.2 L725 82.3 L733.3 88.3 L741.7 94.2 L750 100 L758.3 105.6 L766.7 111 L775 116.1 L783.3 121.1 L791.7 125.7 L800 130 L808.3 134 L816.7 137.7 L825 141 L833.3 143.9 L841.7 146.5 L850 148.8 L858.3 150.7 L866.7 152.2 L875 153.5 L883.3 154.4 L891.7 155 L900 155.4 L908.3 155.6 L916.7 155.5 L925 155.2 L933.3 154.8 L941.7 154.2 L950 153.6 L958.3 152.9 L966.7 152.1 L975 151.3 L983.3 150.6 L991.7 149.9 L1000 149.3 L1000 211.7 L991.7 212.3 L983.3 213 L975 213.7 L966.7 214.5 L958.3 215.3 L950 216 L941.7 216.6 L933.3 217.2 L925 217.6 L916.7 217.9 L908.3 218 L900 217.8 L891.7 217.4 L883.3 216.8 L875 215.9 L866.7 214.6 L858.3 213.1 L850 211.2 L841.7 208.9 L833.3 206.3 L825 203.4 L816.7 200.1 L808.3 196.4 L800 192.4 L791.7 188.1 L783.3 183.5 L775 178.5 L766.7 173.4 L758.3 168 L750 162.4 L741.7 156.6 L733.3 150.7 L725 144.7 L716.7 138.6 L708.3 132.6 L700 126.6 L691.7 120.6 L683.3 114.8 L675 109.2 L666.7 103.8 L658.3 98.7 L650 93.8 L641.7 89.3 L633.3 85.2 L625 81.5 L616.7 78.2 L608.3 75.4 L600 73.2 L591.7 71.4 L583.3 70.2 L575 69.5 L566.7 69.4 L558.3 69.9 L550 70.9 L541.7 72.5 L533.3 74.6 L525 77.3 L516.7 80.4 L508.3 84.1 L500 88.2 L491.7 92.8 L483.3 97.8 L475 103.1 L466.7 108.8 L458.3 114.7 L450 120.9 L441.7 127.3 L433.3 133.8 L425 140.4 L416.7 147.1 L408.3 153.7 L400 160.4 L391.7 166.9 L383.3 173.4 L375 179.6 L366.7 185.7 L358.3 191.5 L350 197 L341.7 202.2 L333.3 207.1 L325 211.6 L316.7 215.8 L308.3 219.6 L300 222.9 L291.7 225.9 L283.3 228.4 L275 230.5 L266.7 232.3 L258.3 233.6 L250 234.5 L241.7 235.1 L233.3 235.4 L225 235.3 L216.7 234.9 L208.3 234.3 L200 233.4 L191.7 232.3 L183.3 231 L175 229.6 L166.7 228 L158.3 226.4 L150 224.8 L141.7 223.1 L133.3 221.4 L125 219.8 L116.7 218.3 L108.3 216.8 L100 215.5 L91.7 214.2 L83.3 213.2 L75 212.3 L66.7 211.5 L58.3 211 L50 210.6 L41.7 210.4 L33.3 210.3 L25 210.5 L16.7 210.7 L8.3 211.1 L0 211.7 Z" fill="var(--color-accent)" opacity=".10" stroke="var(--color-neutral-600)" stroke-width="1" stroke-dasharray="4 4"></path>
+          <path class="wb-draw" d="M0 180.5 L8.3 179.9 L16.7 179.5 L25 179.3 L33.3 179.1 L41.7 179.2 L50 179.4 L58.3 179.8 L66.7 180.3 L75 181.1 L83.3 182 L91.7 183 L100 184.3 L108.3 185.6 L116.7 187.1 L125 188.6 L133.3 190.2 L141.7 191.9 L150 193.6 L158.3 195.2 L166.7 196.8 L175 198.4 L183.3 199.8 L191.7 201.1 L200 202.2 L208.3 203.1 L216.7 203.7 L225 204.1 L233.3 204.2 L241.7 203.9 L250 203.3 L258.3 202.4 L266.7 201.1 L275 199.3 L283.3 197.2 L291.7 194.7 L300 191.7 L308.3 188.4 L316.7 184.6 L325 180.4 L333.3 175.9 L341.7 171 L350 165.8 L358.3 160.3 L366.7 154.5 L375 148.4 L383.3 142.2 L391.7 135.7 L400 129.2 L408.3 122.5 L416.7 115.9 L425 109.2 L433.3 102.6 L441.7 96.1 L450 89.7 L458.3 83.5 L466.7 77.6 L475 71.9 L483.3 66.6 L491.7 61.6 L500 57 L508.3 52.9 L516.7 49.2 L525 46.1 L533.3 43.4 L541.7 41.3 L550 39.7 L558.3 38.7 L566.7 38.2 L575 38.3 L583.3 39 L591.7 40.2 L600 42 L608.3 44.2 L616.7 47 L625 50.3 L633.3 54 L641.7 58.1 L650 62.6 L658.3 67.5 L666.7 72.6 L675 78 L683.3 83.6 L691.7 89.4 L700 95.4 L708.3 101.4 L716.7 107.4 L725 113.5 L733.3 119.5 L741.7 125.4 L750 131.2 L758.3 136.8 L766.7 142.2 L775 147.3 L783.3 152.3 L791.7 156.9 L800 161.2 L808.3 165.2 L816.7 168.9 L825 172.2 L833.3 175.1 L841.7 177.7 L850 180 L858.3 181.9 L866.7 183.4 L875 184.7 L883.3 185.6 L891.7 186.2 L900 186.6 L908.3 186.8 L916.7 186.7 L925 186.4 L933.3 186 L941.7 185.4 L950 184.8 L958.3 184.1 L966.7 183.3 L975 182.5 L983.3 181.8 L991.7 181.1 L1000 180.5" fill="none" stroke="var(--color-accent)" stroke-width="2.5"></path>
+          <g class="wb-sweep">
+            <line x1="0" y1="-6" x2="0" y2="266" stroke="var(--color-accent-800)" stroke-width="1.5"></line>
+            <rect x="-2" y="-18" width="4" height="8" fill="var(--color-accent-800)"></rect>
+          </g>
+          <g class="wb-pulse" stroke="var(--color-accent-800)" stroke-width="1.5">
+            <rect x="80" y="196" width="92" height="30" fill="none"></rect>
+            <line x1="126" y1="226" x2="126" y2="244" stroke-width="1"></line>
+          </g>
+          <text x="86" y="216" font-family="Barlow" font-size="14" fill="var(--color-accent-900)">lk = 1</text>
+          <g font-family="Barlow" font-size="12" fill="rgba(29,31,32,.55)">
+            <text x="0" y="282">00:00</text><text x="240" y="282">06:00</text><text x="490" y="282">12:00</text><text x="740" y="282">18:00</text><text x="948" y="282">24:00</text>
+            <text x="1006" y="4">20</text><text x="1006" y="134">10</text><text x="1006" y="264">0</text>
+          </g>
+        </svg>
       </div>
-      <div class="card">
-        <h3>Overuse · oc=1</h3>
-        <p class="muted">Daytime and lm &gt; W(t) + 0.50 L/min. Human-behaviour excess vs the signature.</p>
+
+      <div class="chart-side">
+        <div class="blueprint panel">
+          <div class="panel-title">Coefficients on …/fp</div>
+          <table class="table" style="font-size:13px">
+            <tbody>
+              <tr><td class="text-muted">w̄</td><td class="right num">9.04 L/h</td></tr>
+              <tr><td class="text-muted">A₁ / φ₁</td><td class="right num">5.52 / −2.10</td></tr>
+              <tr><td class="text-muted">A₂ / φ₂</td><td class="right num">2.61 / +0.80</td></tr>
+              <tr><td class="text-muted">T₁ / T₂</td><td class="right num">24 h / 12 h</td></tr>
+              <tr><td class="text-muted">fit rows</td><td class="right num">41 280</td></tr>
+            </tbody>
+          </table>
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        </div>
+
+        <div class="blueprint panel flag">
+          <div class="flag-head"><span class="flag-title">NIGHT LEAK FLAGGED</span></div>
+          <p>02:00–05:00 held 2.6 L/h against a modelled 0.9 L/h. The MCU raised <code>lk</code> in the 00:41 publish; no valve action was taken.</p>
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        </div>
+
+        <div>
+          <div class="panel-title is-quiet">Payload seen by the device</div>
+          <pre>{"w":9.04,"a1":5.52,
+ "p1":-2.10,"a2":2.61,
+ "p2":0.80,"t1":24,"t2":12}</pre>
+        </div>
       </div>
     </div>
-    <p class="muted">EEPROM stores the last fingerprint so validation continues after reboot even if the radio is down.</p>
 
-    <div class="footer">
+    <div class="grid-3" style="margin-top:34px">
+      <div class="card blueprint">
+        <div class="card-kicker">why two harmonics</div>
+        <div class="card-title">Morning and evening, not one bell</div>
+        <p class="card-body">A single 24 h sine cannot hold both peaks. The 12 h term costs two more floats and captures the second draw.</p>
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      </div>
+      <div class="card blueprint">
+        <div class="card-kicker">why on-device</div>
+        <div class="card-title">The radio is off most of the time</div>
+        <p class="card-body">Evaluating W(t) locally means a leak is flagged in the next 60 s publish instead of waiting for a round trip the modem may not get.</p>
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      </div>
+      <div class="card blueprint">
+        <div class="card-kicker">what it is not</div>
+        <div class="card-title">Not a neural net</div>
+        <p class="card-body">Least squares on seven coefficients. It fits in flash, it is inspectable, and a wrong flag can be traced to a number.</p>
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      </div>
+    </div>
+
+    <div class="grid-split" style="margin-top:46px">
+      <div>
+        <h2 style="font-size:26px;margin-bottom:10px">MQTT keys</h2>
+        <table class="table">
+          <thead><tr><th style="width:80px">Symbol</th><th style="width:80px">JSON</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td>w̄</td><td class="num">w</td><td class="text-muted">Mean use (L/min)</td></tr>
+            <tr><td>A₁, φ₁</td><td class="num">a1, p1</td><td class="text-muted">Daily harmonic</td></tr>
+            <tr><td>T₁</td><td class="num">t1</td><td class="text-muted">24 hours</td></tr>
+            <tr><td>A₂, φ₂</td><td class="num">a2, p2</td><td class="text-muted">Twice-daily harmonic</td></tr>
+            <tr><td>T₂</td><td class="num">t2</td><td class="text-muted">12 hours</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 style="font-size:26px;margin-bottom:10px">Onboard verdicts</h2>
+        <div class="blueprint panel" style="margin-bottom:14px">
+          <div class="panel-title">Night leak · lk = 1</div>
+          <p style="margin:0;font-size:13.5px">Hour in [00:00, 05:00) and <code>lm</code> &gt; W(t) + 0.15 L/min — unknown night water on the owner site.</p>
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        </div>
+        <div class="blueprint panel">
+          <div class="panel-title">Overuse · oc = 1</div>
+          <p style="margin:0;font-size:13.5px">Daytime and <code>lm</code> &gt; W(t) + 0.50 L/min — human-behaviour excess against the signature.</p>
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        </div>
+        <p class="text-muted" style="margin-top:14px;font-size:13px">EEPROM stores the last fingerprint, so validation continues after a reboot even with the radio down.</p>
+      </div>
+    </div>
+
+    <p class="text-muted" style="margin:32px 0 0;font-size:13px">Pipeline drawing: <a href="diagrams/04-ml-analysis-flow.png">04-ml-analysis-flow.png</a> — assemble hour-of-day samples → 5×5 normal equations → store and MQTT retain → onboard lk/oc.</p>
+
+    <div class="site-footer">
       <span>Source: docs/SIGNATURE.md, software/waterbox_cloud/fingerprint.py</span>
       <a href="index.html">Home</a>
     </div>
-  </div>
+  </main>
 </body>
 </html>
