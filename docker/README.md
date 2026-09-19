@@ -16,6 +16,7 @@ docker compose up --build
 | http://localhost:3000 | Grafana (you only — not the household UI) |
 | http://localhost:15672 | RabbitMQ  (`waterbox` / `waterbox`) |
 | `:1883` | MQTT for the SIM800 |
+| `:5433` | Postgres (host). Inside Compose it is still `postgres:5432`. Host `5432` is left free if another DB is already bound. |
 
 ## Meter
 
@@ -27,3 +28,15 @@ docker compose up --build
 Charts fill after the first MQTT `data` publishes. The worker fits a fingerprint after **12 samples** (~12 minutes at a 60 s interval in this lab `.env`). Heartbeat is hourly on `waterbox/<IMEI>/hb`.
 
 The map heatmap is not meaningful with a single house (you compare to yourself). Address geocoding still places **your** meter on OSM.
+
+Replay public smart-meter CSVs (DAIAD Alicante) into MQTT:
+
+```bash
+pip install paho-mqtt==1.6.1
+python3 ../tools/simulate_mqtt.py --source daiad --meters 3 --hours 504 --sleep 0.008
+docker compose exec worker python -m waterbox_cloud.fit_once
+```
+
+Timestamps are shifted so the last sample is “now” (portal last-30-days charts work). Then register that IMEI on :3001.
+
+RabbitMQ / Grafana / portal configs are **baked into images** (no host bind mounts), so Docker Desktop does not need `/mnt/...` file sharing.

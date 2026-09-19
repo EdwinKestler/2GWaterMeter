@@ -3,7 +3,8 @@ name: waterbox
 
 services:
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    build:
+      context: ./rabbitmq
     hostname: rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${MQTT_USER:-waterbox}
@@ -13,8 +14,6 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
-      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
@@ -23,15 +22,15 @@ services:
       retries: 10
 
   postgres:
-    image: postgres:16-alpine
+    build:
+      context: ./postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-waterbox}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-waterbox}
       POSTGRES_DB: ${POSTGRES_DB:-waterbox}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-waterbox} -d ${POSTGRES_DB:-waterbox}"]
@@ -40,7 +39,8 @@ services:
       retries: 10
 
   grafana:
-    image: grafana/grafana:11.2.0
+    build:
+      context: ./grafana
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,11 +49,10 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
       GF_USERS_DEFAULT_THEME: dark
       GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-http://localhost:3000}
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
     ports:
       - "3000:3000"
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
 
   worker:
