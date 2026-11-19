@@ -16,6 +16,8 @@ hardware/cad/exports/*.step
 hardware/cad/exports/*.stp
 docker/.env
 software/.venv/
+.venv/
+firmware/waterbox/waterbox.code-workspace
 tools/demo_water_meter_databases/
 user_portal/node_modules/
 user_portal/.next/
